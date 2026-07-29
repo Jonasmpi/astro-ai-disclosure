@@ -84,10 +84,15 @@ const scenarios = [
   </p>
 
   <p class="assets">
-    Sample images live in <code>src/assets/</code>: <code>mining-site.webp</code>,
-    <code>abstract-ai-visual.webp</code> and <code>team-photo.jpg</code>. They are generated
-    placeholder graphics, not photographs and not AI-generated — the AI metadata attached to them in
-    later steps is illustrative.
+    Sample images live in <code>src/assets/</code> — two Unsplash photographs and one generated gradient
+    graphic. Credits and licence: <code>src/assets/CREDITS.md</code>.
+  </p>
+
+  <p class="assets warn">
+    <strong>None of these images is AI-generated or AI-modified.</strong> The metadata the scenario pages
+    attach to them — including <code>kind: "generated"</code> and <code>scope: "deepfake"</code> — is
+    fictional, written only to exercise the disclosure logic under each policy. Declaring AI involvement
+    that did not happen is as wrong as omitting it.
   </p>
 </BaseLayout>
 
@@ -99,6 +104,10 @@ const scenarios = [
     border: 1px solid var(--border);
     border-radius: 0.5rem;
     font-size: 0.95rem;
+  }
+
+  .warn {
+    border-left: 4px solid #d97706;
   }
 
   h2 {
