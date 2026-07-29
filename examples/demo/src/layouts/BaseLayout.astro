@@ -1,0 +1,83 @@
+---
+interface Props {
+  title: string;
+  intro?: string;
+}
+
+const { title, intro } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>{title} · astro-ai-disclosure demo</title>
+  </head>
+  <body>
+    <main>
+      <p class="eyebrow"><a href="/">astro-ai-disclosure demo</a></p>
+      <h1>{title}</h1>
+      {intro && <p class="intro">{intro}</p>}
+      <slot />
+    </main>
+  </body>
+</html>
+
+<style is:global>
+  :root {
+    color-scheme: light dark;
+    --fg: #14181f;
+    --muted: #5b6472;
+    --bg: #ffffff;
+    --border: #d8dee8;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --fg: #e8ecf3;
+      --muted: #99a3b3;
+      --bg: #12151b;
+      --border: #2b323d;
+    }
+  }
+
+  body {
+    margin: 0;
+    color: var(--fg);
+    background: var(--bg);
+    font-family: system-ui, sans-serif;
+    line-height: 1.6;
+  }
+
+  main {
+    max-width: 68rem;
+    margin: 0 auto;
+    padding: 3rem 1.5rem 5rem;
+  }
+
+  h1 {
+    margin: 0.25rem 0 0.75rem;
+    font-size: clamp(1.8rem, 4vw, 2.6rem);
+    line-height: 1.2;
+  }
+
+  .eyebrow {
+    margin: 0;
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .eyebrow a {
+    color: var(--muted);
+    text-decoration: none;
+  }
+
+  .intro {
+    max-width: 46rem;
+    color: var(--muted);
+  }
+</style>
