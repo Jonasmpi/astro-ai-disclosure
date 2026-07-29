@@ -42,6 +42,35 @@ pnpm build
 Contributions follow a branch-based workflow: one step = one branch = one squash-merged PR, with
 Conventional Commits and mandatory unit tests. `main` is protected and always releasable.
 
+## Releasing
+
+Versioning and publishing run on [Changesets](https://github.com/changesets/changesets).
+
+1. Any PR with a user-facing change adds a changeset in the same PR:
+
+   ```bash
+   pnpm changeset
+   ```
+
+   Pick the package, pick patch/minor/major, and describe the change — the text lands in the
+   changelog. Tooling-only PRs (CI, lint config) need no changeset.
+
+2. Merging such a PR to `main` makes the release workflow open or update a version PR titled
+   `chore: version packages`. It applies the pending changesets: bumps the version, rewrites
+   `CHANGELOG.md` and deletes the consumed changeset files.
+
+3. Merging _that_ PR publishes the package to npm and pushes the git tag. No manual `npm publish`.
+
+### One-time setup
+
+| What                        | Where                                               | Why                                                                                                                                             |
+| --------------------------- | --------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `NPM_TOKEN` secret          | Settings → Secrets and variables → Actions          | An npm **automation** token for an account owning the `@jonasmpi` scope. Granular tokens work too, if scoped to read/write this package.        |
+| Allow Actions to create PRs | Settings → Actions → General → Workflow permissions | Without it the release workflow cannot open the version PR and fails with `GitHub Actions is not permitted to create or approve pull requests`. |
+
+The token must be an _automation_ token (or a granular token with publishing rights) — a classic
+"publish" token with 2FA required will fail in CI, because there is nobody to answer the 2FA prompt.
+
 ## Legal note
 
 This package helps you _declare_ AI involvement consistently. It does not detect AI content, and the

@@ -25,6 +25,7 @@
     "build": "pnpm -r --if-present run build"
   },
   "devDependencies": {
+    "@changesets/cli": "^2.31.1",
     "@eslint/js": "^9.39.1",
     "eslint": "^9.39.1",
     "eslint-plugin-astro": "^1.4.1",

@@ -38,6 +38,7 @@
     "dist",
     "src/components",
     "README.md",
+    "CHANGELOG.md",
     "LICENSE"
   ],
   "scripts": {
