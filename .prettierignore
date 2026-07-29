@@ -1,0 +1,10 @@
+node_modules
+dist
+.astro
+coverage
+pnpm-lock.yaml
+CHANGELOG.md
+
+# Hand-maintained source-of-truth document — Prettier's markdown table reflow
+# would create large diffs on every step update.
+implementation_plan/
