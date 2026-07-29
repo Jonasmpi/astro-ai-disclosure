@@ -1,0 +1,59 @@
+{
+  "name": "@jonasmpi/astro-ai-disclosure",
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Astro integration for consistent, accessible AI-disclosure labelling of images (EU AI Act Article 50 context)",
+  "license": "MIT",
+  "author": "Jonas Szalanczi (https://github.com/Jonasmpi)",
+  "homepage": "https://github.com/Jonasmpi/astro-ai-disclosure#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Jonasmpi/astro-ai-disclosure.git",
+    "directory": "packages/astro-ai-disclosure"
+  },
+  "bugs": {
+    "url": "https://github.com/Jonasmpi/astro-ai-disclosure/issues"
+  },
+  "keywords": [
+    "astro",
+    "astro-integration",
+    "ai",
+    "disclosure",
+    "ai-act",
+    "withastro"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "exports": {
+    ".": "./dist/index.js",
+    "./components": "./src/components/index.ts",
+    "./package.json": "./package.json"
+  },
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "src/components",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "peerDependencies": {
+    "astro": "^7.0.0"
+  },
+  "devDependencies": {
+    "astro": "^7.1.6",
+    "tsup": "^8.5.1",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.10"
+  }
+}
