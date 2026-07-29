@@ -16,7 +16,9 @@ permissions:
 
 jobs:
   ci:
-    name: lint, typecheck, test, build
+    # This is the status-check name branch protection binds to. Keep it stable:
+    # renaming it silently breaks the required check and blocks every PR.
+    name: verify
     runs-on: ubuntu-latest
     steps:
       - name: Check out
