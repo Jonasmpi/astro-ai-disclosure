@@ -6,6 +6,8 @@ import { VIRTUAL_CONFIG_TYPES, virtualConfigPlugin } from "./virtual-config";
 
 export * from "./types";
 export { DEFAULT_LABELS, containsAI, resolveLabel, shouldDisclose } from "./disclosure";
+export { resolveBadge } from "./badge";
+export type { BadgeView, DisclosureDataAttributes, DisclosureOverrides } from "./badge";
 export { AIDisclosureConfigError, DEFAULT_OPTIONS, mergeLabels, resolveOptions } from "./options";
 export { VIRTUAL_CONFIG_ID } from "./virtual-config";
 

@@ -48,6 +48,9 @@ importers:
       '@astrojs/check':
         specifier: ^0.9.10
         version: 0.9.10(prettier-plugin-astro@0.14.1)(prettier@3.9.6)(typescript@5.9.3)
+      sharp:
+        specifier: ^0.35.3
+        version: 0.35.3
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -3749,8 +3752,7 @@ snapshots:
 
   '@humanwhocodes/retry@0.4.3': {}
 
-  '@img/colour@1.1.0':
-    optional: true
+  '@img/colour@1.1.0': {}
 
   '@img/sharp-darwin-arm64@0.35.3':
     optionalDependencies:
@@ -5613,7 +5615,6 @@ snapshots:
       '@img/sharp-win32-arm64': 0.35.3
       '@img/sharp-win32-ia32': 0.35.3
       '@img/sharp-win32-x64': 0.35.3
-    optional: true
 
   shebang-command@2.0.0:
     dependencies:

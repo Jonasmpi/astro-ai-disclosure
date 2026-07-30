@@ -37,6 +37,7 @@
       "types": "./dist/types.d.ts",
       "default": "./dist/types.js"
     },
+    "./AIImage.astro": "./src/components/AIImage.astro",
     "./components": "./src/components/index.ts",
     "./package.json": "./package.json"
   },

@@ -1,0 +1,3 @@
+Astro warns when a project has no `pages/` directory. This package is a library
+and has no pages, so `vitest.config.ts` points `srcDir` here to keep the test
+output clean. Nothing is meant to live in this folder.
