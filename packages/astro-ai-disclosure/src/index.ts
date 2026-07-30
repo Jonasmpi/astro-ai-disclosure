@@ -1,5 +1,6 @@
 import type { AstroIntegration } from "astro";
 
+import { enforcementPlugin } from "./enforcement";
 import { resolveOptions, toVirtualConfig } from "./options";
 import type { AIDisclosureOptions } from "./types";
 import { VIRTUAL_CONFIG_TYPES, virtualConfigPlugin } from "./virtual-config";
@@ -10,6 +11,8 @@ export { resolveBadge } from "./badge";
 export type { BadgeView, DisclosureDataAttributes, DisclosureOverrides } from "./badge";
 export { AIDisclosureConfigError, DEFAULT_OPTIONS, mergeLabels, resolveOptions } from "./options";
 export { VIRTUAL_CONFIG_ID } from "./virtual-config";
+export { FORBIDDEN_BINDINGS, findForbiddenImports } from "./enforcement";
+export type { ForbiddenImport } from "./enforcement";
 
 /**
  * The integration name, identical to the published package name. Astro uses it
@@ -22,10 +25,8 @@ export const INTEGRATION_NAME = "@jonasmpi/astro-ai-disclosure";
  *
  * Resolves and validates the options eagerly, so a typo in `astro.config.ts`
  * fails while the config is being read rather than at first render, then exposes
- * the result to components through `virtual:astro-ai-disclosure/config`.
- *
- * The components themselves arrive in steps 1.3 and 1.4, build enforcement in
- * step 1.5 — `enforcement` and `exclude` are validated here but not yet acted on.
+ * the result to components through `virtual:astro-ai-disclosure/config` and
+ * registers the plugin that forbids direct `astro:assets` imports.
  */
 export default function aiDisclosure(options: AIDisclosureOptions = {}): AstroIntegration {
   const config = resolveOptions(options);
@@ -34,9 +35,18 @@ export default function aiDisclosure(options: AIDisclosureOptions = {}): AstroIn
     name: INTEGRATION_NAME,
     hooks: {
       "astro:config:setup": ({ updateConfig }) => {
+        // `enforcement: "off"` yields no plugin at all rather than a no-op one.
+        const enforcement = enforcementPlugin({
+          enforcement: config.enforcement,
+          exclude: config.exclude,
+        });
+
         updateConfig({
           vite: {
-            plugins: [virtualConfigPlugin(toVirtualConfig(config))],
+            plugins: [
+              virtualConfigPlugin(toVirtualConfig(config)),
+              ...(enforcement ? [enforcement] : []),
+            ],
           },
         });
       },

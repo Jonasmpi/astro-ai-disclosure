@@ -1,0 +1,79 @@
+---
+// ---------------------------------------------------------------------------
+// MANUAL REPRO for build enforcement (step 1.5).
+//
+// Uncomment the line below and run `pnpm --filter demo build`. The build must
+// fail with a message naming this file and pointing at AIImage/AIPicture.
+// This demo runs with `enforcement: "error"`, so the build stops rather than
+// merely warning.
+//
+// import { Image } from "astro:assets";
+// ---------------------------------------------------------------------------
+
+import AIImage from "@jonasmpi/astro-ai-disclosure/AIImage.astro";
+// `getImage` is deliberately allowed: it returns image data, not markup, so it
+// cannot put an unlabelled image on the page.
+import { getImage } from "astro:assets";
+
+import platedDish from "../../assets/plated-dish.jpg";
+import ScenarioLayout from "../../layouts/ScenarioLayout.astro";
+
+const optimized = await getImage({ src: platedDish, width: 320, format: "webp" });
+---
+
+<ScenarioLayout
+  title="Build enforcement"
+  intro="The integration registers a Vite plugin that refuses direct astro:assets Image and Picture imports, so an unlabelled image cannot reach a page by accident."
+  expectation="This page builds cleanly. Its frontmatter holds a commented-out violating import; uncommenting it stops the build with a message naming this file."
+>
+  <h2>What is refused</h2>
+  <ul>
+    <li><code>import &lbrace; Image &rbrace; from "astro:assets"</code></li>
+    <li><code>import &lbrace; Picture &rbrace; from "astro:assets"</code></li>
+    <li>the same under an alias — <code>&lbrace; Image as Hero &rbrace;</code></li>
+    <li><code>import * as assets from "astro:assets"</code>, which can reach both</li>
+  </ul>
+
+  <h2>What is allowed</h2>
+  <ul>
+    <li><code>getImage</code> and <code>inferRemoteSize</code> — data, not markup</li>
+    <li>type-only imports, which are erased before anything renders</li>
+    <li>any file matched by the integration's <code>exclude</code> patterns</li>
+  </ul>
+
+  <h2><code>getImage</code> in practice</h2>
+  <p class="note">
+    This page calls <code>getImage</code> in its frontmatter and the build accepts it. The resulting URL
+    is <code>{optimized.src}</code> ({optimized.attributes.width ?? 320}px wide).
+  </p>
+  <p class="note">
+    Rendering it still goes through <code>AIImage</code>, so the disclosure stays intact:
+  </p>
+  <AIImage
+    src={platedDish}
+    alt="A plated dish on a restaurant table"
+    widths={[640]}
+    sizes="640px"
+    format="webp"
+    ai={{ kind: "assisted", scope: "not-in-scope", description: "Colour correction" }}
+  />
+</ScenarioLayout>
+
+<style>
+  h2 {
+    margin-top: 2.25rem;
+    font-size: 1.05rem;
+  }
+
+  ul {
+    max-width: 46rem;
+    color: var(--muted);
+    font-size: 0.92rem;
+  }
+
+  .note {
+    max-width: 46rem;
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+</style>
