@@ -1,5 +1,8 @@
 import type { AstroIntegration } from "astro";
 
+export * from "./types";
+export { DEFAULT_LABELS, containsAI, resolveLabel, shouldDisclose } from "./disclosure";
+
 /**
  * The integration name, identical to the published package name. Astro uses it
  * in logs and error messages, so it is exported for reuse in diagnostics.
