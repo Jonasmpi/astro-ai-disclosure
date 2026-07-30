@@ -62,6 +62,15 @@ Versioning and publishing run on [Changesets](https://github.com/changesets/chan
 
 3. Merging _that_ PR publishes the package to npm and pushes the git tag. No manual `npm publish`.
 
+### Publishing is currently disabled
+
+Nothing is published to npm yet. The release workflow runs on every push to `main` but its publish
+step is gated on the `NPM_PUBLISH_ENABLED` repository variable, which is not set. Until then the
+workflow only opens and updates the version PR — version bumps and changelog entries accumulate in
+the repository and are published later, in one go.
+
+That means the first npm release will be a real version, not a `0.0.0` placeholder.
+
 ### One-time setup
 
 Publishing uses npm **trusted publishing** (OIDC), so there is no npm token stored in this
@@ -73,7 +82,7 @@ releases get a verified provenance badge.
 | Trusted publisher           | npmjs.com → package → Settings → Trusted publishing        | Links the package to this repository and the `release.yml` workflow. The package must already exist on npm, so the very first publish is manual. |
 | Allow Actions to create PRs | GitHub Settings → Actions → General → Workflow permissions | Without it the release workflow cannot open the version PR and fails with `GitHub Actions is not permitted to create or approve pull requests`.  |
 
-Bootstrap sequence for the first ever release:
+Bootstrap sequence, to run once when the npm account is ready:
 
 ```bash
 npm login
@@ -81,8 +90,15 @@ cd packages/astro-ai-disclosure
 npm publish --access public      # creates the package on npm
 ```
 
-Then configure the trusted publisher on npmjs.com (repository `Jonasmpi/astro-ai-disclosure`,
-workflow `release.yml`). Every release after that runs through the workflow with no manual step.
+Then, in order:
+
+1. Configure the trusted publisher on npmjs.com (repository `Jonasmpi/astro-ai-disclosure`,
+   workflow `release.yml`) — this requires the package to already exist, which is why the first
+   publish is manual.
+2. Set the repository variable `NPM_PUBLISH_ENABLED` to `true` under GitHub Settings → Secrets and
+   variables → Actions → Variables.
+
+Every release after that runs through the workflow with no manual step.
 
 ## Legal note
 
