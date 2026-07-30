@@ -1,0 +1,152 @@
+---
+import config from "virtual:astro-ai-disclosure/config";
+
+import BaseLayout from "../layouts/BaseLayout.astro";
+
+/**
+ * Every value below comes from `astro.config.ts` through the virtual module —
+ * nothing on this page hard-codes it. The "package default" column is written
+ * out literally so a regression that silently falls back to the defaults is
+ * visible rather than plausible.
+ */
+const rows = [
+  { option: "policy", value: config.policy, packageDefault: "eu-article-50" },
+  { option: "defaultLanguage", value: config.defaultLanguage, packageDefault: "en" },
+  { option: "badge.position", value: config.badge.position, packageDefault: "bottom-right" },
+] as const;
+
+const labelRows = (["de", "en"] as const).flatMap((language) =>
+  (["generated", "modified", "assisted"] as const).map((kind) => ({
+    language,
+    kind,
+    label: config.labels[language][kind],
+  })),
+);
+---
+
+<BaseLayout
+  title="Central configuration"
+  intro="The integration resolves its options once and exposes them to components through the virtual:astro-ai-disclosure/config module. This page renders that module's contents verbatim."
+>
+  <h2>Resolved options</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Option</th>
+        <th>Value here</th>
+        <th>Package default</th>
+      </tr>
+    </thead>
+    <tbody>
+      {
+        rows.map((row) => (
+          <tr>
+            <td>
+              <code>{row.option}</code>
+            </td>
+            <td>
+              <code class="value">{row.value}</code>
+            </td>
+            <td>
+              <code class="muted">{row.packageDefault}</code>
+            </td>
+          </tr>
+        ))
+      }
+    </tbody>
+  </table>
+  <p class="note">
+    All three differ from the package default, so they can only have come from the demo's
+    <code>astro.config.ts</code>.
+  </p>
+
+  <h2>Resolved labels</h2>
+  <p class="note">
+    <code>astro.config.ts</code> overrides only <code>labels.de.generated</code>. Everything else
+    must still be the built-in text — that is what the deep merge is for.
+  </p>
+  <table>
+    <thead>
+      <tr>
+        <th>Language</th>
+        <th>Kind</th>
+        <th>Label</th>
+      </tr>
+    </thead>
+    <tbody>
+      {
+        labelRows.map((row) => (
+          <tr>
+            <td>
+              <code>{row.language}</code>
+            </td>
+            <td>
+              <code>{row.kind}</code>
+            </td>
+            <td>{row.label}</td>
+          </tr>
+        ))
+      }
+    </tbody>
+  </table>
+
+  <h2>Raw module contents</h2>
+  <pre><code>{JSON.stringify(config, null, 2)}</code></pre>
+  <p class="note">
+    <code>enforcement</code> and <code>exclude</code> are absent by design: they are build-time only,
+    and <code>exclude</code> holds regular expressions that would not survive serialisation.
+  </p>
+</BaseLayout>
+
+<style>
+  table {
+    width: 100%;
+    max-width: 46rem;
+    margin: 0.5rem 0 0.75rem;
+    border-collapse: collapse;
+    font-size: 0.92rem;
+  }
+
+  th,
+  td {
+    padding: 0.45rem 0.6rem;
+    border-bottom: 1px solid var(--border);
+    text-align: left;
+  }
+
+  th {
+    color: var(--muted);
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .value {
+    font-weight: 700;
+  }
+
+  .muted {
+    color: var(--muted);
+  }
+
+  .note {
+    max-width: 46rem;
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+
+  h2 {
+    margin-top: 2.25rem;
+    font-size: 1.15rem;
+  }
+
+  pre {
+    max-width: 46rem;
+    padding: 0.9rem 1.1rem;
+    overflow-x: auto;
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    font-size: 0.85rem;
+  }
+</style>
