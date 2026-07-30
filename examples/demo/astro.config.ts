@@ -17,7 +17,9 @@ export default defineConfig({
         // A single override; the other German labels must survive the merge.
         de: { generated: "Von KI erzeugt" },
       },
-      enforcement: "warn",
+      // The recommended consumer setting: a direct astro:assets import fails the
+      // build rather than merely warning.
+      enforcement: "error",
     }),
   ],
 });
