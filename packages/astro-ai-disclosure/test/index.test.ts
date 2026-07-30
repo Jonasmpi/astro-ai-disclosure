@@ -1,18 +1,128 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
-import aiDisclosure, { INTEGRATION_NAME } from "../src/index";
+import { DEFAULT_LABELS } from "../src/disclosure";
+import aiDisclosure, { AIDisclosureConfigError, INTEGRATION_NAME } from "../src/index";
+import { RESOLVED_VIRTUAL_CONFIG_ID, VIRTUAL_CONFIG_ID } from "../src/virtual-config";
 
-describe("aiDisclosure", () => {
+type LoadablePlugin = { name: string; load: (id: string) => string | undefined };
+
+/**
+ * Runs `astro:config:setup` with only the payload member the hook touches.
+ *
+ * The cast is on the argument, not the hook: Astro's payload has a dozen
+ * members and building all of them would test the stub rather than the code.
+ */
+function runConfigSetup(integration: ReturnType<typeof aiDisclosure>) {
+  const updateConfig = vi.fn();
+  const hook = integration.hooks["astro:config:setup"];
+  if (!hook) throw new Error("astro:config:setup hook missing");
+  void hook({ updateConfig } as unknown as Parameters<typeof hook>[0]);
+  return updateConfig;
+}
+
+function pluginFrom(updateConfig: ReturnType<typeof vi.fn>): LoadablePlugin {
+  const passed = updateConfig.mock.calls[0]?.[0] as { vite: { plugins: LoadablePlugin[] } };
+  const plugin = passed.vite.plugins[0];
+  if (!plugin) throw new Error("no plugin registered");
+  return plugin;
+}
+
+/** Evaluates the virtual module's source back into data. */
+function servedConfig(plugin: LoadablePlugin): unknown {
+  const source = plugin.load(RESOLVED_VIRTUAL_CONFIG_ID);
+  if (source === undefined) throw new Error("plugin served nothing");
+  return JSON.parse(
+    source.replace(/^export default Object\.freeze\(/, "").replace(/\);\n$/, ""),
+  ) as unknown;
+}
+
+describe("aiDisclosure — registration", () => {
   it("registers under the published package name", () => {
     expect(aiDisclosure().name).toBe(INTEGRATION_NAME);
     expect(INTEGRATION_NAME).toBe("@jonasmpi/astro-ai-disclosure");
   });
 
-  it("installs no hooks yet", () => {
-    expect(aiDisclosure().hooks).toEqual({});
+  it("installs exactly the hooks it needs", () => {
+    expect(Object.keys(aiDisclosure().hooks).sort()).toEqual([
+      "astro:config:done",
+      "astro:config:setup",
+    ]);
   });
 
   it("returns an independent object on every call", () => {
     expect(aiDisclosure()).not.toBe(aiDisclosure());
+  });
+});
+
+describe("aiDisclosure — option validation timing", () => {
+  it("rejects bad options while the config is read, not at render time", () => {
+    expect(() => aiDisclosure({ policy: "nope" as never })).toThrow(AIDisclosureConfigError);
+  });
+
+  it("accepts valid options", () => {
+    expect(() => aiDisclosure({ policy: "all-ai", defaultLanguage: "de" })).not.toThrow();
+  });
+});
+
+describe("astro:config:setup", () => {
+  it("registers the virtual-config Vite plugin", () => {
+    const updateConfig = runConfigSetup(aiDisclosure());
+    expect(updateConfig).toHaveBeenCalledOnce();
+    expect(pluginFrom(updateConfig).name).toBe("astro-ai-disclosure:virtual-config");
+  });
+
+  it("bakes the resolved options into the served module", () => {
+    const updateConfig = runConfigSetup(
+      aiDisclosure({
+        policy: "all-ai",
+        defaultLanguage: "de",
+        badge: { position: "top-left" },
+        labels: { de: { generated: "Von KI erzeugt" } },
+      }),
+    );
+
+    expect(servedConfig(pluginFrom(updateConfig))).toEqual({
+      policy: "all-ai",
+      defaultLanguage: "de",
+      badge: { position: "top-left" },
+      labels: {
+        de: {
+          generated: "Von KI erzeugt",
+          modified: DEFAULT_LABELS.de.modified,
+          assisted: DEFAULT_LABELS.de.assisted,
+        },
+        en: DEFAULT_LABELS.en,
+      },
+    });
+  });
+
+  it("serves the defaults when no options are given", () => {
+    expect(servedConfig(pluginFrom(runConfigSetup(aiDisclosure())))).toEqual({
+      policy: "eu-article-50",
+      defaultLanguage: "en",
+      badge: { position: "bottom-right" },
+      labels: DEFAULT_LABELS,
+    });
+  });
+
+  it("does not leak enforcement or exclude into the client module", () => {
+    const updateConfig = runConfigSetup(aiDisclosure({ enforcement: "warn", exclude: [/secret/] }));
+    const source = pluginFrom(updateConfig).load(RESOLVED_VIRTUAL_CONFIG_ID) ?? "";
+    expect(source).not.toContain("enforcement");
+    expect(source).not.toContain("secret");
+  });
+});
+
+describe("astro:config:done", () => {
+  it("injects the ambient declaration for the virtual module", () => {
+    const injectTypes = vi.fn();
+    const hook = aiDisclosure().hooks["astro:config:done"];
+    if (!hook) throw new Error("astro:config:done hook missing");
+    void hook({ injectTypes } as unknown as Parameters<typeof hook>[0]);
+
+    expect(injectTypes).toHaveBeenCalledOnce();
+    const arg = injectTypes.mock.calls[0]?.[0] as { filename: string; content: string };
+    expect(arg.filename).toBe("config.d.ts");
+    expect(arg.content).toContain(`declare module "${VIRTUAL_CONFIG_ID}"`);
   });
 });

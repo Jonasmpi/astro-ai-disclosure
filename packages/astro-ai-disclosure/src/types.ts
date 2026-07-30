@@ -95,10 +95,7 @@ export interface AIDisclosureOptions {
   exclude?: RegExp[];
 }
 
-/**
- * Options after defaults are applied. This is the shape the virtual config
- * module exposes to components (step 1.2).
- */
+/** Options after defaults are applied and every value is validated. */
 export interface ResolvedAIDisclosureConfig {
   policy: DisclosurePolicy;
   defaultLanguage: Language;
@@ -109,3 +106,16 @@ export interface ResolvedAIDisclosureConfig {
   enforcement: EnforcementMode;
   exclude: RegExp[];
 }
+
+/**
+ * The part of the resolved config that reaches components through
+ * `virtual:astro-ai-disclosure/config`.
+ *
+ * `enforcement` and `exclude` are deliberately absent: they only matter to the
+ * build-time Vite plugin, and `exclude` holds `RegExp`s, which do not survive
+ * the JSON serialisation the virtual module relies on.
+ */
+export type VirtualDisclosureConfig = Pick<
+  ResolvedAIDisclosureConfig,
+  "policy" | "defaultLanguage" | "labels" | "badge"
+>;
