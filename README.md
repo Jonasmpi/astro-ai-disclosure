@@ -3,8 +3,9 @@
 Consistent, accessible **AI-disclosure labelling for images in Astro** — built with the transparency
 obligations of **EU AI Act Article 50** in mind.
 
-> **Status: early development (pre-`v0.1.0`).** Nothing is published to npm yet. The package is being
-> built step by step; expect the API to change until `v0.1.0` is tagged.
+> **Status: early development (pre-`v0.1.0`).** Any version currently on npm is a **placeholder**
+> that reserves the name and exercises the release pipeline — it registers an integration that does
+> nothing. Wait for `v0.1.0` before using this for real.
 
 ## What it will do
 
@@ -63,13 +64,25 @@ Versioning and publishing run on [Changesets](https://github.com/changesets/chan
 
 ### One-time setup
 
-| What                        | Where                                               | Why                                                                                                                                             |
-| --------------------------- | --------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| `NPM_TOKEN` secret          | Settings → Secrets and variables → Actions          | An npm **automation** token for an account owning the `@jonasmpi` scope. Granular tokens work too, if scoped to read/write this package.        |
-| Allow Actions to create PRs | Settings → Actions → General → Workflow permissions | Without it the release workflow cannot open the version PR and fails with `GitHub Actions is not permitted to create or approve pull requests`. |
+Publishing uses npm **trusted publishing** (OIDC), so there is no npm token stored in this
+repository. The workflow mints a short-lived OIDC token, npm exchanges it for publish rights, and
+releases get a verified provenance badge.
 
-The token must be an _automation_ token (or a granular token with publishing rights) — a classic
-"publish" token with 2FA required will fail in CI, because there is nobody to answer the 2FA prompt.
+| What                        | Where                                                      | Why                                                                                                                                              |
+| --------------------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Trusted publisher           | npmjs.com → package → Settings → Trusted publishing        | Links the package to this repository and the `release.yml` workflow. The package must already exist on npm, so the very first publish is manual. |
+| Allow Actions to create PRs | GitHub Settings → Actions → General → Workflow permissions | Without it the release workflow cannot open the version PR and fails with `GitHub Actions is not permitted to create or approve pull requests`.  |
+
+Bootstrap sequence for the first ever release:
+
+```bash
+npm login
+cd packages/astro-ai-disclosure
+npm publish --access public      # creates the package on npm
+```
+
+Then configure the trusted publisher on npmjs.com (repository `Jonasmpi/astro-ai-disclosure`,
+workflow `release.yml`). Every release after that runs through the workflow with no manual step.
 
 ## Legal note
 
