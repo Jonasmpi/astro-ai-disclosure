@@ -3,86 +3,105 @@
 Consistent, accessible **AI-disclosure labelling for images in Astro** — built with the transparency
 obligations of **EU AI Act Article 50** in mind.
 
-> **Status: early development (pre-`v0.1.0`).** Any version currently on npm is a **placeholder**
-> that reserves the name and exercises the release pipeline — it registers an integration that does
-> nothing. Wait for `v0.1.0` before using this for real.
+You record what AI did to an image. The package decides whether that needs a visible label, renders
+an accessible badge when it does, and stops an unlabelled image reaching a page by accident.
 
-## What it will do
+> **Status: pre-release.** Feature-complete for `v0.1.0` and covered by 209 tests. The version is cut
+> by the release workflow; publishing to npm is waiting on the npm account. See
+> [Releasing](#releasing).
 
-- `<AIImage>` / `<AIPicture>` wrappers around `astro:assets` that render a visible, accessible
-  disclosure badge from structured AI metadata.
-- Central policy configuration via an Astro integration — `eu-article-50` (default) or `all-ai`.
-- Build-time enforcement that forbids direct `astro:assets` `<Image>` / `<Picture>` imports.
-- Sidecar `.ai.json` metadata with validation and a compliance report (v0.2).
-- Optional "baked" labels via a custom Sharp image service, so the label survives downloading the
-  image (v0.3).
+```astro
+---
+import AIImage from "@jonasmpi/astro-ai-disclosure/AIImage.astro";
+import hero from "../assets/hero.jpg";
+---
 
-## Requirements
+<AIImage
+  src={hero}
+  alt="A monitored mining operation"
+  widths={[640, 960, 1440]}
+  ai={{ kind: "generated", scope: "deepfake", provider: "OpenAI" }}
+/>
+```
 
-- Astro `^7.0.0` (peer dependency)
-- Node `>=22`
-- pnpm `>=10` (this repo is a pnpm workspace)
+## Documentation
+
+**[Full documentation is in the package README](./packages/astro-ai-disclosure/README.md)** —
+install, options reference, component props, the policy matrix, styling and accessibility.
+
+In short:
+
+- `<AIImage>` / `<AIPicture>` wrap `astro:assets` and inherit their full prop types.
+- `kind` (what AI did) is kept separate from `scope` (how it is classified). Collapsing them into
+  one boolean is the mistake this package exists to prevent.
+- Two policy modes: `eu-article-50` (default) labels only what is declared in scope; `all-ai` labels
+  any declared AI involvement.
+- Direct `astro:assets` `Image` / `Picture` imports fail the build.
+- German and English labels built in; `labels` deep-merges over them.
 
 ## Repository layout
 
 ```text
 packages/astro-ai-disclosure/   the integration package
-examples/demo/                  Astro 7 example site (integration test + living documentation)
+examples/demo/                  Astro 7 example site — integration test and living documentation
 ```
+
+The demo has a page per feature and its build doubles as the package's integration test. It is also
+the only place the enforcement plugin is exercised against a real Astro build.
 
 ## Local development
 
 ```bash
 pnpm install
-pnpm lint
-pnpm typecheck
-pnpm test
-pnpm build
+pnpm lint          # eslint
+pnpm format:check  # prettier
+pnpm typecheck     # tsc for the package, astro check for the demo
+pnpm test          # vitest, including Astro Container API render tests
+pnpm build         # package (tsup) then demo (astro build)
+
+pnpm --filter demo dev
 ```
 
-Contributions follow a branch-based workflow: one step = one branch = one squash-merged PR, with
-Conventional Commits and mandatory unit tests. `main` is protected and always releasable.
+Requires Node `>=22` and pnpm `>=10`.
+
+`pnpm test` alone is not a sufficient gate — esbuild strips types without checking them, so several
+real errors in this repo were caught only by `pnpm typecheck`. CI runs the full sequence.
+
+## Contributing
+
+One change = one branch = one squash-merged PR, with [Conventional
+Commits](https://www.conventionalcommits.org/). `main` is protected and always releasable.
+
+Any PR that adds or changes logic must add Vitest tests for it in the same PR. Component rendering is
+covered through the Astro Container API and by asserting against the built demo's HTML.
 
 ## Releasing
 
 Versioning and publishing run on [Changesets](https://github.com/changesets/changesets).
 
-1. Any PR with a user-facing change adds a changeset in the same PR:
+1. A PR with a user-facing change adds a changeset:
 
    ```bash
    pnpm changeset
    ```
 
-   Pick the package, pick patch/minor/major, and describe the change — the text lands in the
-   changelog. Tooling-only PRs (CI, lint config) need no changeset.
+   Pick patch/minor/major and describe the change — the text becomes the changelog entry.
+   Tooling-only PRs need no changeset.
 
-2. Merging such a PR to `main` makes the release workflow open or update a version PR titled
-   `chore: version packages`. It applies the pending changesets: bumps the version, rewrites
-   `CHANGELOG.md` and deletes the consumed changeset files.
+2. Merging to `main` makes the release workflow open or update a version PR titled
+   `chore: version packages`, which applies the pending changesets: bumps the version, rewrites
+   `CHANGELOG.md`, deletes the consumed changeset files.
 
-3. Merging _that_ PR publishes the package to npm and pushes the git tag. No manual `npm publish`.
+3. Merging _that_ PR publishes to npm and pushes the tag — once publishing is enabled.
 
 ### Publishing is currently disabled
 
-Nothing is published to npm yet. The release workflow runs on every push to `main` but its publish
-step is gated on the `NPM_PUBLISH_ENABLED` repository variable, which is not set. Until then the
-workflow only opens and updates the version PR — version bumps and changelog entries accumulate in
-the repository and are published later, in one go.
+The release workflow's publish step is gated on the `NPM_PUBLISH_ENABLED` repository variable, which
+is not set. Until it is, the workflow only maintains the version PR: version bumps and changelog
+entries accumulate in the repository and go out together later. A useful side effect is that the
+first npm release will be a real version rather than a `0.0.0` placeholder.
 
-That means the first npm release will be a real version, not a `0.0.0` placeholder.
-
-### One-time setup
-
-Publishing uses npm **trusted publishing** (OIDC), so there is no npm token stored in this
-repository. The workflow mints a short-lived OIDC token, npm exchanges it for publish rights, and
-releases get a verified provenance badge.
-
-| What                        | Where                                                      | Why                                                                                                                                              |
-| --------------------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Trusted publisher           | npmjs.com → package → Settings → Trusted publishing        | Links the package to this repository and the `release.yml` workflow. The package must already exist on npm, so the very first publish is manual. |
-| Allow Actions to create PRs | GitHub Settings → Actions → General → Workflow permissions | Without it the release workflow cannot open the version PR and fails with `GitHub Actions is not permitted to create or approve pull requests`.  |
-
-Bootstrap sequence, to run once when the npm account is ready:
+To enable it, once:
 
 ```bash
 npm login
@@ -90,21 +109,20 @@ cd packages/astro-ai-disclosure
 npm publish --access public      # creates the package on npm
 ```
 
-Then, in order:
+Then configure the trusted publisher on npmjs.com (repository `Jonasmpi/astro-ai-disclosure`,
+workflow `release.yml`) — it requires the package to exist, which is why the first publish is manual
+— and set `NPM_PUBLISH_ENABLED` to `true` under Settings → Secrets and variables → Actions →
+Variables. Publishing uses npm trusted publishing (OIDC), so no npm token is stored in this
+repository.
 
-1. Configure the trusted publisher on npmjs.com (repository `Jonasmpi/astro-ai-disclosure`,
-   workflow `release.yml`) — this requires the package to already exist, which is why the first
-   publish is manual.
-2. Set the repository variable `NPM_PUBLISH_ENABLED` to `true` under GitHub Settings → Secrets and
-   variables → Actions → Variables.
-
-Every release after that runs through the workflow with no manual step.
+GitHub Settings → Actions → General must also allow Actions to create pull requests, or the release
+workflow cannot open the version PR.
 
 ## Legal note
 
 This package helps you _declare_ AI involvement consistently. It does not detect AI content, and the
-legal texts and policy modes it ships are an **implementation interpretation, not legal advice**.
-Assessing whether a specific image falls under Article 50 remains your responsibility.
+policy modes and label texts it ships are an **implementation interpretation, not legal advice**.
+Whether a specific image falls under Article 50 remains your judgement, recorded in `scope`.
 
 ## License
 

@@ -3,34 +3,243 @@
 Consistent, accessible **AI-disclosure labelling for images in Astro** — built with the transparency
 obligations of **EU AI Act Article 50** in mind.
 
-> ## ⚠️ Pre-release — not usable yet
->
-> This version is a **placeholder**. It registers an Astro integration that does nothing: there are
-> no components, no configuration and no disclosure badge yet. It exists so the package name is
-> reserved and the release pipeline can be verified end to end.
->
-> Wait for **`v0.1.0`** before installing this for real.
+You record what AI did to an image. The package decides whether that needs a visible label, renders
+an accessible badge when it does, and stops an unlabelled image reaching a page by accident.
 
-## What it will do
+> **Not yet on npm.** Publishing is pending; until then, see
+> [the repository](https://github.com/Jonasmpi/astro-ai-disclosure) for how to try it from source.
 
-- `<AIImage>` / `<AIPicture>` wrappers around `astro:assets` that render a visible, accessible
-  disclosure badge from structured AI metadata.
-- Central policy configuration — `eu-article-50` (default) or `all-ai`.
-- Build-time enforcement that forbids direct `astro:assets` `<Image>` / `<Picture>` imports.
-- Sidecar `.ai.json` metadata with validation and a compliance report (v0.2).
-- Optional "baked" labels via a custom Sharp image service, so the label survives downloading the
-  image (v0.3).
+## Install
 
-## Requirements
+```bash
+pnpm add @jonasmpi/astro-ai-disclosure
+# or
+npx astro add @jonasmpi/astro-ai-disclosure
+```
 
-- Astro `^7.0.0` (peer dependency)
-- Node `>=22`
+```ts
+// astro.config.ts
+import aiDisclosure from "@jonasmpi/astro-ai-disclosure";
+import { defineConfig } from "astro/config";
+
+export default defineConfig({
+  integrations: [aiDisclosure()],
+});
+```
+
+Requires **Astro `^7.0.0`** and **Node `>=22`**.
+
+> **pnpm users:** Astro's image optimization needs `sharp`, and pnpm's isolated `node_modules` stops
+> Astro reaching its own bundled copy. If the build fails with `MissingSharp`, add it explicitly:
+> `pnpm add -D sharp`.
+
+## Quick start
+
+```astro
+---
+import AIImage from "@jonasmpi/astro-ai-disclosure/AIImage.astro";
+import hero from "../assets/hero.jpg";
+---
+
+<AIImage
+  src={hero}
+  alt="A monitored mining operation"
+  widths={[640, 960, 1440]}
+  sizes="(max-width: 768px) 100vw, 1200px"
+  ai={{ kind: "generated", scope: "deepfake", provider: "OpenAI", model: "GPT Image" }}
+/>
+```
+
+`AIImage` wraps `astro:assets` `<Image>` and inherits its full prop type, so every optimization
+option keeps working. `AIPicture` does the same for `<Picture>`.
+
+## The two axes: `kind` and `scope`
+
+These are deliberately separate, and collapsing them into a single `isAI` boolean is the mistake this
+package exists to prevent. An image can be entirely AI-generated without attracting the same
+obligation as a deepfake.
+
+**`kind` — what AI actually did (technical):**
+
+| Value       | Meaning                                                     |
+| ----------- | ----------------------------------------------------------- |
+| `none`      | No AI involvement. An explicit declaration, not an absence. |
+| `assisted`  | Ordinary AI-supported editing — denoise, colour correction. |
+| `modified`  | An existing image materially altered by AI.                 |
+| `generated` | Synthesised by an AI system.                                |
+
+**`scope` — how it is classified for disclosure (a judgement you record):**
+
+| Value             | Meaning                                                                         |
+| ----------------- | ------------------------------------------------------------------------------- |
+| `not-in-scope`    | No visible label required.                                                      |
+| `deepfake`        | Resembles a real person, place, entity or event closely enough to seem genuine. |
+| `creative-work`   | Part of an evidently artistic or fictional work.                                |
+| `review-required` | Not yet assessed.                                                               |
+
+The package never infers either value. It only acts on what you declare.
+
+## Policy modes
+
+```ts
+aiDisclosure({ policy: "eu-article-50" }); // default
+aiDisclosure({ policy: "all-ai" }); // recommended for organisation-wide consistency
+```
+
+| `kind`                                | `scope`           | `eu-article-50` | `all-ai`  |
+| ------------------------------------- | ----------------- | --------------- | --------- |
+| `none`                                | any               | no badge        | no badge  |
+| `assisted` / `modified` / `generated` | `not-in-scope`    | no badge        | **badge** |
+| `assisted` / `modified` / `generated` | `deepfake`        | **badge**       | **badge** |
+| `assisted` / `modified` / `generated` | `creative-work`   | **badge**       | **badge** |
+| `assisted` / `modified` / `generated` | `review-required` | **badge**       | **badge** |
+
+`review-required` discloses under both policies on purpose: "nobody has classified this yet" is not
+the same as "not in scope", and staying silent risks missing an obligation while labelling only
+restates what `kind` already declares.
+
+## The three canonical cases
+
+**In scope — badge under both policies.** A photorealistic synthetic image that could be taken for a
+real scene:
+
+```astro
+<AIImage
+  src={miningSite}
+  alt="A monitored mining operation"
+  ai={{ kind: "generated", scope: "deepfake", provider: "OpenAI", model: "GPT Image" }}
+/>
+```
+
+**Voluntary labelling — badge only under `all-ai`.** A clearly fictional illustration that nobody
+would mistake for a photograph:
+
+```astro
+<AIImage
+  src={abstractVisual}
+  alt="Abstract illustration of an industrial AI system"
+  ai={{ kind: "generated", scope: "not-in-scope", provider: "OpenAI" }}
+/>
+```
+
+**Ordinary editing — no badge under `eu-article-50`.** A real photograph with routine retouching:
+
+```astro
+<AIImage
+  src={teamPhoto}
+  alt="The team"
+  ai={{ kind: "assisted", scope: "not-in-scope", description: "Colour correction" }}
+/>
+```
+
+In all three the declaration is written into the markup as `data-ai-*` attributes, **even when no
+badge is shown** — withholding a visible label does not withhold the declaration.
+
+## Options
+
+```ts
+aiDisclosure({
+  policy: "all-ai",
+  defaultLanguage: "de",
+  labels: { de: { generated: "Von KI erzeugt" } },
+  badge: { position: "top-left" },
+  enforcement: "error",
+  exclude: [/legacy/],
+});
+```
+
+| Option            | Type                                                           | Default           | Notes                                            |
+| ----------------- | -------------------------------------------------------------- | ----------------- | ------------------------------------------------ |
+| `policy`          | `"eu-article-50" \| "all-ai"`                                  | `"eu-article-50"` | Which declarations get a visible label.          |
+| `defaultLanguage` | `"de" \| "en"`                                                 | `"en"`            | Language for the built-in labels.                |
+| `labels`          | `{ de?: {…}, en?: {…} }`                                       | built-ins         | Deep-merged; override one string, keep the rest. |
+| `badge.position`  | `"top-left" \| "top-right" \| "bottom-left" \| "bottom-right"` | `"bottom-right"`  | Badge corner.                                    |
+| `enforcement`     | `"off" \| "warn" \| "error"`                                   | `"error"`         | See below.                                       |
+| `exclude`         | `RegExp[]`                                                     | `[]`              | Files exempt from enforcement.                   |
+
+Options are validated when the Astro config is read, so a typo fails immediately with a message
+naming the option, the value received and the allowed set — rather than being silently ignored.
+
+Built-in labels:
+
+| `kind`      | `en`         | `de`                 |
+| ----------- | ------------ | -------------------- |
+| `generated` | AI-generated | KI-generiert         |
+| `modified`  | AI-modified  | Mit KI verändert     |
+| `assisted`  | AI-assisted  | Mit KI-Unterstützung |
+
+## Component props
+
+Both components accept everything their `astro:assets` counterpart does, plus:
+
+| Prop            | Type               | Notes                                              |
+| --------------- | ------------------ | -------------------------------------------------- |
+| `ai`            | `AIDisclosure`     | The declaration. Omitted means "nothing declared". |
+| `policy`        | `DisclosurePolicy` | Overrides the configured policy for this image.    |
+| `language`      | `Language`         | Overrides the configured language.                 |
+| `badgePosition` | `BadgePosition`    | Overrides the configured corner.                   |
+
+`AIDisclosure` fields: `kind` and `scope` (both required), plus optional `provider`, `model`,
+`createdAt`, `description` and `label`. A `label` overrides the generated badge text.
+
+## Build enforcement
+
+Direct `astro:assets` imports are refused, so an unlabelled image cannot reach a page by accident:
+
+```
+[@jonasmpi/astro-ai-disclosure] Direct astro:assets imports are not allowed: `Image`.
+
+Images must go through this package so their AI-disclosure metadata is handled consistently:
+  import AIImage from "@jonasmpi/astro-ai-disclosure/AIImage.astro";
+```
+
+Caught: `Image`, `Picture`, aliases (`{ Image as Hero }`) and namespace imports (`* as assets`).
+Allowed: `getImage` and `inferRemoteSize` (they return data, not markup), type-only imports, and
+anything matching `exclude`.
+
+Set `enforcement: "warn"` while migrating an existing site, or `"off"` to disable it.
+
+## Styling
+
+The badge is plain markup with stable class names:
+
+```css
+.ai-disclosure {
+} /* wrapper, also carries the data-ai-* attributes */
+.ai-disclosure__badge {
+} /* the badge itself */
+.ai-disclosure__symbol {
+} /* the "AI" glyph */
+.ai-disclosure--top-left {
+} /* one per corner */
+```
+
+The wrapper carries `data-ai-kind`, `data-ai-scope` and, when provided, `data-ai-provider`,
+`data-ai-model` and `data-ai-created-at` — useful for auditing what a built site actually declares:
+
+```bash
+grep -o 'data-ai-kind="[^"]*"' dist/**/*.html | sort | uniq -c
+```
+
+## Accessibility
+
+The badge is a `role="note"` with an `aria-label` combining the visible label and your `description`.
+The decorative "AI" glyph is `aria-hidden`. `provider` and `model` are deliberately left out of the
+accessible name — they would need prefixes no label set translates, and a screen-reader name should
+stay short. Both remain available as `data-ai-*`. A `forced-colors` fallback keeps the badge legible
+in high-contrast mode.
 
 ## Legal note
 
-This package helps you _declare_ AI involvement consistently. It does not detect AI content, and the
-legal texts and policy modes it ships are an **implementation interpretation, not legal advice**.
-Assessing whether a specific image falls under Article 50 remains your responsibility.
+This package helps you _declare_ AI involvement consistently and label it legibly. It does not detect
+AI content, and it cannot tell you whether a given image falls under Article 50 — that judgement is
+yours, recorded in `scope`.
+
+The policy modes and label texts are an **implementation interpretation, not legal advice**.
+
+- [Guidelines on transparency obligations](https://digital-strategy.ec.europa.eu/en/library/guidelines-transparency-obligations-providers-and-deployers-ai-systems)
+- [Article 50 FAQ](https://digital-strategy.ec.europa.eu/en/faqs/transparency-obligations-under-article-50-ai-act)
+- [EU icons for labelling AI-generated content](https://digital-strategy.ec.europa.eu/en/policies/eu-icons-labelling-ai-generated-content)
 
 ## Links
 
