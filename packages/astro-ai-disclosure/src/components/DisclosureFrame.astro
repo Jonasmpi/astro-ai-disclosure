@@ -1,0 +1,119 @@
+---
+import type { BadgeView } from "@jonasmpi/astro-ai-disclosure";
+
+/**
+ * Wraps an image in the disclosure frame and renders the badge over it.
+ *
+ * Shared by `AIImage` and `AIPicture`. The whole frame lives here — wrapper
+ * element, badge markup and styles together — rather than only the badge, so
+ * Astro's scoped styles never have to reach across component boundaries.
+ *
+ * The image itself is slotted in by the caller, which is what keeps this
+ * component agnostic about `<Image>` versus `<Picture>`.
+ */
+interface Props {
+  badge: BadgeView;
+}
+
+const { badge } = Astro.props;
+---
+
+<span class:list={["ai-disclosure", `ai-disclosure--${badge.position}`]} {...badge.data}>
+  <slot />
+  {
+    badge.show && (
+      <span
+        class="ai-disclosure__badge"
+        role="note"
+        aria-label={badge.description}
+        title={badge.description}
+      >
+        <span aria-hidden="true" class="ai-disclosure__symbol">
+          AI
+        </span>
+        <span>{badge.label}</span>
+      </span>
+    )
+  }
+</span>
+
+<style>
+  .ai-disclosure {
+    position: relative;
+    display: inline-grid;
+    max-width: 100%;
+    line-height: 0;
+  }
+
+  /* The image is slotted in from the calling component, so it is out of reach
+     of this component's scoped styles. */
+  .ai-disclosure :global(img) {
+    display: block;
+    max-width: 100%;
+  }
+
+  .ai-disclosure :global(picture) {
+    display: contents;
+  }
+
+  .ai-disclosure__badge {
+    position: absolute;
+    z-index: 2;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    max-width: calc(100% - 1rem);
+    padding: 0.35rem 0.5rem;
+    color: white;
+    background: rgb(0 0 0 / 78%);
+    border: 1px solid rgb(255 255 255 / 30%);
+    border-radius: 0.35rem;
+    font-family: system-ui, sans-serif;
+    font-size: 0.7rem;
+    font-weight: 600;
+    line-height: 1.2;
+    backdrop-filter: blur(4px);
+  }
+
+  .ai-disclosure__symbol {
+    display: inline-grid;
+    place-items: center;
+    min-width: 1.45rem;
+    min-height: 1.45rem;
+    border: 1px solid currentColor;
+    border-radius: 0.25rem;
+    font-size: 0.58rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+  }
+
+  .ai-disclosure--top-left .ai-disclosure__badge {
+    top: 0.5rem;
+    left: 0.5rem;
+  }
+
+  .ai-disclosure--top-right .ai-disclosure__badge {
+    top: 0.5rem;
+    right: 0.5rem;
+  }
+
+  .ai-disclosure--bottom-left .ai-disclosure__badge {
+    bottom: 0.5rem;
+    left: 0.5rem;
+  }
+
+  .ai-disclosure--bottom-right .ai-disclosure__badge {
+    right: 0.5rem;
+    bottom: 0.5rem;
+  }
+
+  /* The badge must stay legible when the viewer forces high contrast. */
+  @media (forced-colors: active) {
+    .ai-disclosure__badge {
+      color: CanvasText;
+      background: Canvas;
+      border-color: CanvasText;
+      backdrop-filter: none;
+    }
+  }
+</style>

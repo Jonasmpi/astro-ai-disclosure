@@ -38,7 +38,7 @@
       "default": "./dist/types.js"
     },
     "./AIImage.astro": "./src/components/AIImage.astro",
-    "./components": "./src/components/index.ts",
+    "./AIPicture.astro": "./src/components/AIPicture.astro",
     "./package.json": "./package.json"
   },
   "types": "./dist/index.d.ts",

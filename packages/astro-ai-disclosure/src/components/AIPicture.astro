@@ -6,32 +6,33 @@ import type {
   DisclosurePolicy,
   Language,
 } from "@jonasmpi/astro-ai-disclosure/types";
-import { Image } from "astro:assets";
+import { Picture } from "astro:assets";
 import type { ComponentProps } from "astro/types";
 import config from "virtual:astro-ai-disclosure/config";
 
 import DisclosureFrame from "./DisclosureFrame.astro";
 
-type AstroImageProps = ComponentProps<typeof Image>;
+type AstroPictureProps = ComponentProps<typeof Picture>;
 
 /**
- * Inherits the full `<Image>` prop type, so every optimization option —
- * `widths`, `sizes`, `format`, `quality`, `densities` — keeps working. The
- * disclosure props are additive and each one overrides the central config for
- * this image only.
+ * Inherits the full `<Picture>` prop type, so `formats`, `fallbackFormat` and
+ * `pictureAttributes` keep working alongside the usual optimization options.
+ *
+ * Disclosure behaviour is identical to `AIImage` — both resolve the same badge
+ * view model and render the same frame.
  */
-type Props = AstroImageProps & {
+type Props = AstroPictureProps & {
   ai?: AIDisclosure;
   policy?: DisclosurePolicy;
   language?: Language;
   badgePosition?: BadgePosition;
 };
 
-const { ai, policy, language, badgePosition, class: imageClass, ...imageProps } = Astro.props;
+const { ai, policy, language, badgePosition, class: imageClass, ...pictureProps } = Astro.props;
 
 const badge = resolveBadge({ ai, policy, language, badgePosition }, config);
 ---
 
 <DisclosureFrame badge={badge}>
-  <Image {...imageProps} class={imageClass} />
+  <Picture {...pictureProps} class={imageClass} />
 </DisclosureFrame>
