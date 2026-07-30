@@ -50,11 +50,17 @@ jobs:
 
       # With pending changesets this opens or updates a release PR. Once that PR
       # is merged no changesets remain, so this publishes to npm and tags instead.
+      #
+      # Publishing is gated on the NPM_PUBLISH_ENABLED repository variable. Until
+      # it is set to "true" the `publish` input is empty, which makes the action
+      # manage the version PR only and never touch npm. Version bumps and
+      # changelogs still accumulate normally; they are published once the npm
+      # account is ready. See "Releasing" in the README.
       - name: Create release PR or publish
         uses: changesets/action@v1
         with:
           version: pnpm changeset version
-          publish: pnpm changeset publish
+          publish: ${{ vars.NPM_PUBLISH_ENABLED == 'true' && 'pnpm changeset publish' || '' }}
           commit: "chore: version packages"
           title: "chore: version packages"
         env:
