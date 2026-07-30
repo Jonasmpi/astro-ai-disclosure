@@ -32,7 +32,7 @@ const countOf = (html: string, pattern: RegExp) => (html.match(pattern) ?? []).l
 describe("AIImage — badge presence follows the policy", () => {
   it("renders a badge for an in-scope generated image", async () => {
     const html = await render({ ai: { kind: "generated", scope: "deepfake" } });
-    expect(countOf(html, /ai-image__badge/g)).toBe(1);
+    expect(countOf(html, /ai-disclosure__badge/g)).toBe(1);
     expect(html).toContain('role="note"');
   });
 
@@ -41,18 +41,18 @@ describe("AIImage — badge presence follows the policy", () => {
       ai: { kind: "generated", scope: "not-in-scope" },
       policy: "eu-article-50",
     });
-    expect(countOf(html, /ai-image__badge/g)).toBe(0);
+    expect(countOf(html, /ai-disclosure__badge/g)).toBe(0);
     expect(html).not.toContain('role="note"');
   });
 
   it("renders a badge for the same image under the site's all-ai policy", async () => {
     const html = await render({ ai: { kind: "generated", scope: "not-in-scope" } });
-    expect(countOf(html, /ai-image__badge/g)).toBe(1);
+    expect(countOf(html, /ai-disclosure__badge/g)).toBe(1);
   });
 
   it("renders no badge without metadata", async () => {
     const html = await render({});
-    expect(countOf(html, /ai-image__badge/g)).toBe(0);
+    expect(countOf(html, /ai-disclosure__badge/g)).toBe(0);
   });
 
   it("always renders the image itself", async () => {
@@ -72,7 +72,7 @@ describe("AIImage — reads the central config", () => {
 
   it("uses the configured badge position", async () => {
     const html = await render({ ai: { kind: "generated", scope: "deepfake" } });
-    expect(html).toContain("ai-image--top-left");
+    expect(html).toContain("ai-disclosure--top-left");
   });
 
   it("lets a prop override the configured position", async () => {
@@ -80,8 +80,8 @@ describe("AIImage — reads the central config", () => {
       ai: { kind: "generated", scope: "deepfake" },
       badgePosition: "bottom-right",
     });
-    expect(html).toContain("ai-image--bottom-right");
-    expect(html).not.toContain("ai-image--top-left");
+    expect(html).toContain("ai-disclosure--bottom-right");
+    expect(html).not.toContain("ai-disclosure--top-left");
   });
 
   it("lets a prop override the configured language", async () => {
@@ -116,7 +116,7 @@ describe("AIImage — data attributes", () => {
       ai: { kind: "generated", scope: "not-in-scope" },
       policy: "eu-article-50",
     });
-    expect(countOf(html, /ai-image__badge/g)).toBe(0);
+    expect(countOf(html, /ai-disclosure__badge/g)).toBe(0);
     expect(html).toContain('data-ai-kind="generated"');
   });
 

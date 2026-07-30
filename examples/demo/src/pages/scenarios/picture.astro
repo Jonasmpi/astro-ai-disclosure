@@ -1,0 +1,81 @@
+---
+import AIPicture from "@jonasmpi/astro-ai-disclosure/AIPicture.astro";
+
+import lakesideTerrace from "../../assets/lakeside-terrace.jpg";
+import ScenarioLayout from "../../layouts/ScenarioLayout.astro";
+
+/**
+ * Same declaration as the in-scope generated scenario, so the only difference
+ * on this page is `<Picture>` versus `<Image>` — the disclosure behaviour must
+ * be indistinguishable.
+ */
+const ai = {
+  kind: "generated",
+  scope: "deepfake",
+  provider: "OpenAI",
+  model: "GPT Image",
+  description: "Fictional metadata; the photograph is real",
+} as const;
+---
+
+<ScenarioLayout
+  title="AIPicture with multiple formats"
+  intro="AIPicture wraps astro:assets <Picture>, emitting a <source> per format with the disclosure badge over the whole thing."
+  expectation="A badge identical to the AIImage scenarios, over a <picture> element carrying one <source> for AVIF and one for WebP. Both components render the same frame, so the badge markup is byte-identical."
+>
+  <h2>AVIF and WebP sources</h2>
+  <AIPicture
+    src={lakesideTerrace}
+    alt="Restaurant terrace above a lake at sunset"
+    formats={["avif", "webp"]}
+    widths={[640, 960, 1440]}
+    sizes="(max-width: 768px) 100vw, 900px"
+    quality={80}
+    ai={ai}
+  />
+
+  <h2>With <code>pictureAttributes</code> and a corner override</h2>
+  <p class="note">
+    <code>pictureAttributes</code> reaches the <code>&lt;picture&gt;</code> element itself, and
+    <code>badgePosition</code> overrides the site's <code>top-left</code> default.
+  </p>
+  <AIPicture
+    src={lakesideTerrace}
+    alt="Restaurant terrace above a lake at sunset"
+    formats={["webp"]}
+    widths={[640, 960]}
+    sizes="(max-width: 768px) 100vw, 640px"
+    pictureAttributes={{ class: "framed" }}
+    badgePosition="bottom-right"
+    ai={ai}
+  />
+
+  <h2>Not in scope under <code>eu-article-50</code> — no badge</h2>
+  <p class="note">The sources are still generated; only the visible label is withheld.</p>
+  <AIPicture
+    src={lakesideTerrace}
+    alt="Restaurant terrace above a lake at sunset"
+    formats={["webp"]}
+    widths={[640]}
+    sizes="640px"
+    policy="eu-article-50"
+    ai={{ kind: "assisted", scope: "not-in-scope" }}
+  />
+</ScenarioLayout>
+
+<style>
+  h2 {
+    margin-top: 2.25rem;
+    font-size: 1.05rem;
+  }
+
+  .note {
+    max-width: 46rem;
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+
+  :global(.framed img) {
+    border-radius: 0.6rem;
+  }
+</style>
