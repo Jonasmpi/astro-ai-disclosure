@@ -1,0 +1,62 @@
+---
+import AIImage from "@jonasmpi/astro-ai-disclosure/AIImage.astro";
+
+import abstractAIVisual from "../../assets/abstract-ai-visual.webp";
+import ScenarioLayout from "../../layouts/ScenarioLayout.astro";
+
+/**
+ * A clearly fictional illustration: AI-generated, but declared out of scope.
+ * This is where the two policies diverge.
+ */
+const ai = {
+  kind: "generated",
+  scope: "not-in-scope",
+  provider: "OpenAI",
+  description: "Abstract, evidently non-photographic illustration",
+} as const;
+---
+
+<ScenarioLayout
+  title="Voluntary labelling"
+  intro="An abstract illustration declared as kind=generated, scope=not-in-scope. Article 50's visible-labelling obligation does not reach it, but an organisation may still want it labelled."
+  expectation="A badge under all-ai, and no badge under eu-article-50. This is the one scenario where the policy changes the outcome."
+>
+  <h2>Site policy (<code>all-ai</code>) — badge shown</h2>
+  <p class="note">Labelling beyond what the law requires, for internal consistency.</p>
+  <AIImage
+    src={abstractAIVisual}
+    alt="Abstract illustration of an industrial AI system"
+    widths={[640, 960]}
+    sizes="(max-width: 768px) 100vw, 640px"
+    format="webp"
+    ai={ai}
+  />
+
+  <h2>Overridden to <code>eu-article-50</code> — no badge</h2>
+  <p class="note">
+    The image is still declared as AI-generated in <code>data-ai-kind</code>; only the visible label
+    is withheld, because a clearly fictional illustration cannot be mistaken for authentic.
+  </p>
+  <AIImage
+    src={abstractAIVisual}
+    alt="Abstract illustration of an industrial AI system"
+    widths={[640, 960]}
+    sizes="(max-width: 768px) 100vw, 640px"
+    format="webp"
+    policy="eu-article-50"
+    ai={ai}
+  />
+</ScenarioLayout>
+
+<style>
+  h2 {
+    margin-top: 2.25rem;
+    font-size: 1.05rem;
+  }
+
+  .note {
+    max-width: 46rem;
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+</style>

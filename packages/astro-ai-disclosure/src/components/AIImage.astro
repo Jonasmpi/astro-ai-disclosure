@@ -1,0 +1,125 @@
+---
+import { resolveBadge } from "@jonasmpi/astro-ai-disclosure";
+import type {
+  AIDisclosure,
+  BadgePosition,
+  DisclosurePolicy,
+  Language,
+} from "@jonasmpi/astro-ai-disclosure/types";
+import { Image } from "astro:assets";
+import type { ComponentProps } from "astro/types";
+import config from "virtual:astro-ai-disclosure/config";
+
+type AstroImageProps = ComponentProps<typeof Image>;
+
+/**
+ * Inherits the full `<Image>` prop type, so every optimization option —
+ * `widths`, `sizes`, `format`, `quality`, `densities` — keeps working. The
+ * disclosure props are additive and each one overrides the central config for
+ * this image only.
+ */
+type Props = AstroImageProps & {
+  ai?: AIDisclosure;
+  policy?: DisclosurePolicy;
+  language?: Language;
+  badgePosition?: BadgePosition;
+};
+
+const { ai, policy, language, badgePosition, class: imageClass, ...imageProps } = Astro.props;
+
+const badge = resolveBadge({ ai, policy, language, badgePosition }, config);
+---
+
+<span class:list={["ai-image", `ai-image--${badge.position}`]} {...badge.data}>
+  <Image {...imageProps} class={imageClass} />
+  {
+    badge.show && (
+      <span
+        class="ai-image__badge"
+        role="note"
+        aria-label={badge.description}
+        title={badge.description}
+      >
+        <span aria-hidden="true" class="ai-image__symbol">
+          AI
+        </span>
+        <span>{badge.label}</span>
+      </span>
+    )
+  }
+</span>
+
+<style>
+  .ai-image {
+    position: relative;
+    display: inline-grid;
+    max-width: 100%;
+    line-height: 0;
+  }
+
+  .ai-image :global(img) {
+    display: block;
+    max-width: 100%;
+  }
+
+  .ai-image__badge {
+    position: absolute;
+    z-index: 2;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    max-width: calc(100% - 1rem);
+    padding: 0.35rem 0.5rem;
+    color: white;
+    background: rgb(0 0 0 / 78%);
+    border: 1px solid rgb(255 255 255 / 30%);
+    border-radius: 0.35rem;
+    font-family: system-ui, sans-serif;
+    font-size: 0.7rem;
+    font-weight: 600;
+    line-height: 1.2;
+    backdrop-filter: blur(4px);
+  }
+
+  .ai-image__symbol {
+    display: inline-grid;
+    place-items: center;
+    min-width: 1.45rem;
+    min-height: 1.45rem;
+    border: 1px solid currentColor;
+    border-radius: 0.25rem;
+    font-size: 0.58rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+  }
+
+  .ai-image--top-left .ai-image__badge {
+    top: 0.5rem;
+    left: 0.5rem;
+  }
+
+  .ai-image--top-right .ai-image__badge {
+    top: 0.5rem;
+    right: 0.5rem;
+  }
+
+  .ai-image--bottom-left .ai-image__badge {
+    bottom: 0.5rem;
+    left: 0.5rem;
+  }
+
+  .ai-image--bottom-right .ai-image__badge {
+    right: 0.5rem;
+    bottom: 0.5rem;
+  }
+
+  /* The badge must stay legible when the viewer forces high contrast. */
+  @media (forced-colors: active) {
+    .ai-image__badge {
+      background: Canvas;
+      color: CanvasText;
+      border-color: CanvasText;
+      backdrop-filter: none;
+    }
+  }
+</style>

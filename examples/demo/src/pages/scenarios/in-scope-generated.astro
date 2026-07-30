@@ -1,0 +1,65 @@
+---
+import AIImage from "@jonasmpi/astro-ai-disclosure/AIImage.astro";
+
+import lakesideTerrace from "../../assets/lakeside-terrace.jpg";
+import ScenarioLayout from "../../layouts/ScenarioLayout.astro";
+
+/**
+ * `scope: "deepfake"` is in scope under `eu-article-50`, and any AI kind is in
+ * scope under `all-ai` — so this image carries a badge under both policies.
+ */
+const ai = {
+  kind: "generated",
+  scope: "deepfake",
+  provider: "OpenAI",
+  model: "GPT Image",
+  createdAt: "2026-07-20",
+  description: "Fictional metadata; the photograph is real",
+} as const;
+---
+
+<ScenarioLayout
+  title="In-scope generated image"
+  intro="A photorealistic image declared as kind=generated, scope=deepfake — the core Article 50 case for a website deployer."
+  expectation="A badge on both images below. The policy makes no difference here, because a deepfake declaration is in scope under eu-article-50 and every AI kind is in scope under all-ai."
+>
+  <h2>Site policy (<code>all-ai</code>, from <code>astro.config.ts</code>)</h2>
+  <AIImage
+    src={lakesideTerrace}
+    alt="Restaurant terrace above a lake at sunset"
+    widths={[640, 960, 1440]}
+    sizes="(max-width: 768px) 100vw, 900px"
+    format="webp"
+    quality={85}
+    ai={ai}
+  />
+
+  <h2>Overridden to <code>eu-article-50</code></h2>
+  <p class="note">
+    Same metadata, stricter policy, same outcome — a badge. This is the case the law is actually
+    about.
+  </p>
+  <AIImage
+    src={lakesideTerrace}
+    alt="Restaurant terrace above a lake at sunset"
+    widths={[640, 960]}
+    sizes="(max-width: 768px) 100vw, 640px"
+    format="webp"
+    policy="eu-article-50"
+    badgePosition="bottom-right"
+    ai={ai}
+  />
+</ScenarioLayout>
+
+<style>
+  h2 {
+    margin-top: 2.25rem;
+    font-size: 1.05rem;
+  }
+
+  .note {
+    max-width: 46rem;
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+</style>

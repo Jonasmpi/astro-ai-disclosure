@@ -1,0 +1,41 @@
+---
+import BaseLayout from "./BaseLayout.astro";
+
+interface Props {
+  title: string;
+  intro: string;
+  /** What the reader should see on this page, in prose. */
+  expectation: string;
+}
+
+const { title, intro, expectation } = Astro.props;
+---
+
+<BaseLayout title={title} intro={intro}>
+  <p class="expect"><strong>Expected:</strong> {expectation}</p>
+
+  <slot />
+
+  <p class="disclaimer">
+    <strong>The AI metadata on this page is fictional.</strong> The images are a licence-free Unsplash
+    photograph or a generated gradient graphic — none of them is AI-generated or AI-modified. The
+    <code>kind</code> and <code>scope</code> values exist only to exercise the disclosure logic. See
+    <code>src/assets/CREDITS.md</code>.
+  </p>
+</BaseLayout>
+
+<style>
+  .expect,
+  .disclaimer {
+    max-width: 46rem;
+    padding: 0.9rem 1.1rem;
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    font-size: 0.92rem;
+  }
+
+  .disclaimer {
+    margin-top: 3rem;
+    border-left: 4px solid #d97706;
+  }
+</style>
