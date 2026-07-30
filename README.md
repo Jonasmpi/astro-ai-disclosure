@@ -3,8 +3,9 @@
 Consistent, accessible **AI-disclosure labelling for images in Astro** — built with the transparency
 obligations of **EU AI Act Article 50** in mind.
 
-> **Status: early development (pre-`v0.1.0`).** Nothing is published to npm yet. The package is being
-> built step by step; expect the API to change until `v0.1.0` is tagged.
+> **Status: early development (pre-`v0.1.0`).** Any version currently on npm is a **placeholder**
+> that reserves the name and exercises the release pipeline — it registers an integration that does
+> nothing. Wait for `v0.1.0` before using this for real.
 
 ## What it will do
 
@@ -41,6 +42,47 @@ pnpm build
 
 Contributions follow a branch-based workflow: one step = one branch = one squash-merged PR, with
 Conventional Commits and mandatory unit tests. `main` is protected and always releasable.
+
+## Releasing
+
+Versioning and publishing run on [Changesets](https://github.com/changesets/changesets).
+
+1. Any PR with a user-facing change adds a changeset in the same PR:
+
+   ```bash
+   pnpm changeset
+   ```
+
+   Pick the package, pick patch/minor/major, and describe the change — the text lands in the
+   changelog. Tooling-only PRs (CI, lint config) need no changeset.
+
+2. Merging such a PR to `main` makes the release workflow open or update a version PR titled
+   `chore: version packages`. It applies the pending changesets: bumps the version, rewrites
+   `CHANGELOG.md` and deletes the consumed changeset files.
+
+3. Merging _that_ PR publishes the package to npm and pushes the git tag. No manual `npm publish`.
+
+### One-time setup
+
+Publishing uses npm **trusted publishing** (OIDC), so there is no npm token stored in this
+repository. The workflow mints a short-lived OIDC token, npm exchanges it for publish rights, and
+releases get a verified provenance badge.
+
+| What                        | Where                                                      | Why                                                                                                                                              |
+| --------------------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Trusted publisher           | npmjs.com → package → Settings → Trusted publishing        | Links the package to this repository and the `release.yml` workflow. The package must already exist on npm, so the very first publish is manual. |
+| Allow Actions to create PRs | GitHub Settings → Actions → General → Workflow permissions | Without it the release workflow cannot open the version PR and fails with `GitHub Actions is not permitted to create or approve pull requests`.  |
+
+Bootstrap sequence for the first ever release:
+
+```bash
+npm login
+cd packages/astro-ai-disclosure
+npm publish --access public      # creates the package on npm
+```
+
+Then configure the trusted publisher on npmjs.com (repository `Jonasmpi/astro-ai-disclosure`,
+workflow `release.yml`). Every release after that runs through the workflow with no manual step.
 
 ## Legal note
 
