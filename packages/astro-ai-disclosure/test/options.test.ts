@@ -15,7 +15,7 @@ describe("resolveOptions — defaults", () => {
       policy: "eu-article-50",
       defaultLanguage: "en",
       labels: DEFAULT_LABELS,
-      badge: { position: "bottom-right" },
+      badge: { position: "bottom-right", mode: "overlay" },
       enforcement: "error",
       exclude: [],
       validation: {
@@ -53,7 +53,7 @@ describe("resolveOptions — accepted values", () => {
       policy: "all-ai",
       defaultLanguage: "de",
       labels: DEFAULT_LABELS,
-      badge: { position: "top-left" },
+      badge: { position: "top-left", mode: "overlay" },
       enforcement: "warn",
       exclude,
       validation: {
@@ -188,7 +188,7 @@ describe("toVirtualConfig", () => {
       policy: "all-ai",
       defaultLanguage: "de",
       labels: DEFAULT_LABELS,
-      badge: { position: "bottom-right" },
+      badge: { position: "bottom-right", mode: "overlay" },
       validation: {
         missingMetadata: "error",
         reviewRequired: "error",

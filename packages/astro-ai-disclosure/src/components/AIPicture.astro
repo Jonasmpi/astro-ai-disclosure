@@ -9,6 +9,7 @@ import {
 } from "@jonasmpi/astro-ai-disclosure";
 import type {
   AIDisclosure,
+  BadgeMode,
   BadgePosition,
   DisclosurePolicy,
   Language,
@@ -34,9 +35,18 @@ type Props = AstroPictureProps & {
   policy?: DisclosurePolicy;
   language?: Language;
   badgePosition?: BadgePosition;
+  badgeMode?: BadgeMode;
 };
 
-const { ai, policy, language, badgePosition, class: imageClass, ...pictureProps } = Astro.props;
+const {
+  ai,
+  policy,
+  language,
+  badgePosition,
+  badgeMode,
+  class: imageClass,
+  ...pictureProps
+} = Astro.props;
 
 // An inline `ai` prop wins; otherwise the sidecar manifest is consulted,
 // matched on the image's own absolute path.
@@ -46,7 +56,14 @@ const disclosure = resolveDisclosure(ai, pictureProps.src, manifest);
 // already collapsed for the current command by the integration.
 reportIssue(validateDisclosure(disclosure, pictureProps.src, config.validation));
 
-const badge = resolveBadge({ ai: disclosure, policy, language, badgePosition }, config);
+const badge = resolveBadge({ ai: disclosure, policy, language, badgePosition, badgeMode }, config);
+
+// In baked mode the label is composited into the pixels by the image service,
+// so the overlay must not also render it. The custom props reach the service
+// through <Image>; without this package's image service configured they are
+// simply ignored, and nothing is labelled — which the README calls out.
+const baked = badge.mode === "baked" && badge.show && disclosure !== undefined;
+const frameBadge = baked ? { ...badge, show: false } : badge;
 
 // Feeds the compliance report the integration writes at the end of a build.
 recordDisclosure({
@@ -58,6 +75,11 @@ recordDisclosure({
 });
 ---
 
-<DisclosureFrame badge={badge}>
-  <Picture {...pictureProps} class={imageClass} />
+<DisclosureFrame badge={frameBadge}>
+  <Picture
+    {...pictureProps}
+    class={imageClass}
+    aiKind={baked ? disclosure!.kind : undefined}
+    aiLabel={baked ? badge.label : undefined}
+  />
 </DisclosureFrame>

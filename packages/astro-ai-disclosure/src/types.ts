@@ -41,6 +41,16 @@ export type DisclosurePolicy = "eu-article-50" | "all-ai";
 /** Languages with built-in labels. */
 export type Language = "de" | "en";
 
+/**
+ * How the disclosure is rendered.
+ *
+ * `overlay` is a CSS badge over the image — easy to style, works with any image
+ * service, and disappears the moment someone downloads the file. `baked`
+ * composites the label into the pixels so it survives, at the cost of requiring
+ * this package's Sharp image service.
+ */
+export type BadgeMode = "overlay" | "baked";
+
 /** Where the badge sits over the image. */
 export type BadgePosition = "top-left" | "top-right" | "bottom-left" | "bottom-right";
 
@@ -113,6 +123,8 @@ export interface AIDisclosureOptions {
   badge?: {
     /** @default "bottom-right" */
     position?: BadgePosition;
+    /** @default "overlay" */
+    mode?: BadgeMode;
   };
   /** @default "error" */
   enforcement?: EnforcementMode;
@@ -141,6 +153,7 @@ export interface ResolvedAIDisclosureConfig {
   labels: Labels;
   badge: {
     position: BadgePosition;
+    mode: BadgeMode;
   };
   enforcement: EnforcementMode;
   exclude: RegExp[];

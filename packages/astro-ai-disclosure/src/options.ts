@@ -1,6 +1,7 @@
 import { DEFAULT_LABELS } from "./disclosure";
 import type {
   AIDisclosureOptions,
+  BadgeMode,
   BadgePosition,
   DisclosableKind,
   DisclosurePolicy,
@@ -24,6 +25,7 @@ const BADGE_POSITIONS = [
   "bottom-left",
   "bottom-right",
 ] as const satisfies readonly BadgePosition[];
+const BADGE_MODES = ["overlay", "baked"] as const satisfies readonly BadgeMode[];
 const ENFORCEMENT_MODES = ["off", "warn", "error"] as const satisfies readonly EnforcementMode[];
 const SEVERITIES = ["off", "warn", "error"] as const satisfies readonly ValidationSeverity[];
 const REMOTE_POLICIES = [
@@ -53,11 +55,13 @@ export const DEFAULT_OPTIONS = {
   policy: "eu-article-50",
   defaultLanguage: "en",
   badgePosition: "bottom-right",
+  badgeMode: "overlay",
   enforcement: "error",
 } as const satisfies {
   policy: DisclosurePolicy;
   defaultLanguage: Language;
   badgePosition: BadgePosition;
+  badgeMode: BadgeMode;
   enforcement: EnforcementMode;
 };
 
@@ -177,6 +181,7 @@ export function resolveOptions(options: AIDisclosureOptions = {}): ResolvedAIDis
         "badge.position",
         DEFAULT_OPTIONS.badgePosition,
       ),
+      mode: oneOf(options.badge?.mode, BADGE_MODES, "badge.mode", DEFAULT_OPTIONS.badgeMode),
     },
     enforcement: oneOf(
       options.enforcement,
@@ -252,7 +257,7 @@ export function toVirtualConfig(
     policy: config.policy,
     defaultLanguage: config.defaultLanguage,
     labels: config.labels,
-    badge: { position: config.badge.position },
+    badge: { position: config.badge.position, mode: config.badge.mode },
     // Collapsed here rather than in the component: the integration knows which
     // command Astro is running, and a component should not have to guess.
     validation: {
