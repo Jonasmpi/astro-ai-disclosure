@@ -52,6 +52,7 @@ describe("aiDisclosure — registration", () => {
 
   it("installs exactly the hooks it needs", () => {
     expect(Object.keys(aiDisclosure().hooks).sort()).toEqual([
+      "astro:build:done",
       "astro:config:done",
       "astro:config:setup",
     ]);

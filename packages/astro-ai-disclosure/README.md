@@ -242,6 +242,40 @@ To satisfy the rule for an image with no AI involvement, say so:
 Remote images get their own rule because the fix differs — a sidecar cannot describe a file that is
 not on disk, so the metadata has to be inline.
 
+## Compliance report
+
+Every build writes `dist/ai-image-disclosure-report.json` and prints a summary:
+
+```text
+AI disclosure: 3 image(s), 11 declaration(s), 14 usage(s), 9 labelled
+  kind: assisted=4, generated=6, none=1
+  scope: creative-work=2, deepfake=3, not-in-scope=6
+  report: ai-image-disclosure-report.json
+```
+
+Each entry records one image **and one declaration** — the same asset declared differently on
+different pages produces separate entries, each listing the pages it appears on:
+
+```json
+{
+  "image": "/…/src/assets/hero.webp",
+  "kind": "generated",
+  "scope": "deepfake",
+  "provider": "OpenAI",
+  "badge": true,
+  "policy": "eu-article-50",
+  "pages": ["/", "/about/"],
+  "usages": 2
+}
+```
+
+The summary counts by kind and scope and lists anything needing attention: `undeclared`,
+`awaitingReview`, and `conflicting` — images declared more than one way, which may be deliberate but
+is worth a look.
+
+Entries are sorted, so two builds of the same site produce identical files and the report can be
+committed or diffed as compliance evidence.
+
 ## Build enforcement
 
 Direct `astro:assets` imports are refused, so an unlabelled image cannot reach a page by accident:

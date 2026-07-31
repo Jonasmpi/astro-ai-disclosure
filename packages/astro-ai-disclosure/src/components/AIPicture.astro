@@ -1,5 +1,7 @@
 ---
 import {
+  describeImage,
+  recordDisclosure,
   reportIssue,
   resolveBadge,
   resolveDisclosure,
@@ -45,6 +47,15 @@ const disclosure = resolveDisclosure(ai, pictureProps.src, manifest);
 reportIssue(validateDisclosure(disclosure, pictureProps.src, config.validation));
 
 const badge = resolveBadge({ ai: disclosure, policy, language, badgePosition }, config);
+
+// Feeds the compliance report the integration writes at the end of a build.
+recordDisclosure({
+  image: describeImage(pictureProps.src),
+  ...(disclosure !== undefined && { disclosure }),
+  badge: badge.show,
+  policy: policy ?? config.policy,
+  page: Astro.url?.pathname,
+});
 ---
 
 <DisclosureFrame badge={badge}>

@@ -4,6 +4,7 @@ import type { AstroIntegration } from "astro";
 
 import { enforcementPlugin } from "./enforcement";
 import { VIRTUAL_MANIFEST_TYPES, manifestPlugin } from "./manifest";
+import { buildReport, collectedRecords, formatSummary, resetRecords, writeReport } from "./report";
 import type { ValidationMode } from "./types";
 import { resolveOptions, toVirtualConfig } from "./options";
 import type { AIDisclosureOptions } from "./types";
@@ -30,6 +31,15 @@ export {
 } from "./options";
 export { VIRTUAL_CONFIG_ID } from "./virtual-config";
 export { FORBIDDEN_BINDINGS, findForbiddenImports } from "./enforcement";
+export {
+  REPORT_FILENAME,
+  buildReport,
+  collectedRecords,
+  formatSummary,
+  recordDisclosure,
+  resetRecords,
+} from "./report";
+export type { DisclosureRecord, DisclosureReport, ReportEntry } from "./report";
 export {
   AIDisclosureSidecarError,
   SIDECAR_SUFFIX,
@@ -63,6 +73,9 @@ export default function aiDisclosure(options: AIDisclosureOptions = {}): AstroIn
         // `preview` serves a finished build, so it is held to build's rules.
         const mode: ValidationMode = command === "dev" ? "development" : "build";
 
+        // A previous run in the same process must not leak into this report.
+        resetRecords();
+
         // `enforcement: "off"` yields no plugin at all rather than a no-op one.
         const enforcement = enforcementPlugin({
           enforcement: config.enforcement,
@@ -78,6 +91,11 @@ export default function aiDisclosure(options: AIDisclosureOptions = {}): AstroIn
             ],
           },
         });
+      },
+      "astro:build:done": ({ dir, logger }) => {
+        const report = buildReport(collectedRecords());
+        writeReport(fileURLToPath(dir), report);
+        logger.info(`\n${formatSummary(report)}`);
       },
       "astro:config:done": ({ injectTypes }) => {
         injectTypes({
