@@ -35,6 +35,7 @@ declare namespace Astro {
   interface CustomImageProps {
     aiKind?: import("@jonasmpi/astro-ai-disclosure/types").DisclosableKind;
     aiLabel?: string;
+    aiIcon?: "eu";
   }
 }
 `;

@@ -2,6 +2,7 @@ import type { ImageTransform, LocalImageService } from "astro";
 import sharpService from "astro/assets/services/sharp";
 import sharp from "sharp";
 
+import { euIconDataUri } from "./eu-icon";
 import type { DisclosableKind } from "./types";
 
 /**
@@ -28,11 +29,14 @@ export const ASTRO_DEFAULT_HASH_PROPS = [
 /** Query parameters carrying the custom props through dev/on-demand URLs. */
 export const AI_KIND_PARAM = "aiKind";
 export const AI_LABEL_PARAM = "aiLabel";
+export const AI_ICON_PARAM = "aiIcon";
 
 /** The extra transform properties this service understands. */
 export interface AITransformProps {
   aiKind?: DisclosableKind;
   aiLabel?: string;
+  /** `"eu"` composites the official mark into the badge. */
+  aiIcon?: string;
 }
 
 type AITransform = ImageTransform & AITransformProps;
@@ -57,6 +61,10 @@ export function escapeXml(value: string): string {
 
 /** Geometry of a baked badge, derived from the image it sits on. */
 export interface BadgeGeometry {
+  /** Side length of the official mark, or 0 when no icon is shown. */
+  iconSize: number;
+  /** Gap between the mark and the text. */
+  iconGap: number;
   width: number;
   height: number;
   fontSize: number;
@@ -73,15 +81,20 @@ export interface BadgeGeometry {
  * be unreadable on a 320px variant and lost on a 1440px one. The floor keeps
  * small variants legible; the cap stops the badge dominating large ones.
  */
-export function badgeGeometry(imageWidth: number, label: string): BadgeGeometry {
+export function badgeGeometry(imageWidth: number, label: string, withIcon = false): BadgeGeometry {
   const fontSize = Math.min(48, Math.max(12, Math.round(imageWidth * 0.028)));
   const paddingX = Math.round(fontSize * 0.7);
   const paddingY = Math.round(fontSize * 0.45);
   // Average glyph advance for the bundled sans stack, measured empirically.
   const textWidth = Math.round(label.length * fontSize * 0.58);
+  // The mark is square and sits at cap height, with a gap before the text.
+  const iconSize = withIcon ? Math.round(fontSize * 1.15) : 0;
+  const iconGap = withIcon ? Math.round(fontSize * 0.4) : 0;
 
   return {
-    width: textWidth + paddingX * 2,
+    iconSize,
+    iconGap,
+    width: textWidth + iconSize + iconGap + paddingX * 2,
     height: fontSize + paddingY * 2,
     fontSize,
     paddingX,
@@ -92,11 +105,20 @@ export function badgeGeometry(imageWidth: number, label: string): BadgeGeometry 
 }
 
 /** Renders the badge as an SVG overlay for compositing. */
-export function renderBadgeSvg(label: string, geometry: BadgeGeometry): string {
+export function renderBadgeSvg(label: string, geometry: BadgeGeometry, icon = false): string {
   const text = escapeXml(label);
+  const textX = geometry.paddingX + geometry.iconSize + geometry.iconGap;
+  const iconY = Math.round((geometry.height - geometry.iconSize) / 2);
+  // Sharp rasterises nested <image> with a data: href, so the official mark
+  // composites without a second Sharp pass.
+  const mark = icon
+    ? `<image x="${geometry.paddingX}" y="${iconY}" width="${geometry.iconSize}" height="${geometry.iconSize}" href="${euIconDataUri("white")}"/>`
+    : "";
+
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${geometry.width}" height="${geometry.height}">
   <rect width="100%" height="100%" rx="${geometry.radius}" fill="rgba(0,0,0,0.78)"/>
-  <text x="${geometry.paddingX}" y="${geometry.paddingY + Math.round(geometry.fontSize * 0.8)}"
+  ${mark}
+  <text x="${textX}" y="${geometry.paddingY + Math.round(geometry.fontSize * 0.8)}"
         fill="#ffffff" font-family="DejaVu Sans, Arial, Helvetica, sans-serif"
         font-size="${geometry.fontSize}" font-weight="600">${text}</text>
 </svg>`;
@@ -121,17 +143,20 @@ export function readAIProps(options: Record<string, unknown>): AITransformProps 
   return {
     ...(typeof kind === "string" && kind !== "" && { aiKind: kind as DisclosableKind }),
     ...(typeof label === "string" && label !== "" && { aiLabel: label }),
+    ...(options[AI_ICON_PARAM] === "eu" && { aiIcon: "eu" }),
   };
 }
 
 /** Appends the custom props to a URL produced by the base service. */
 export function appendAIParams(url: string, props: AITransformProps): string {
-  if (props.aiKind === undefined && props.aiLabel === undefined) return url;
+  if (props.aiKind === undefined && props.aiLabel === undefined && props.aiIcon === undefined)
+    return url;
 
   const separator = url.includes("?") ? "&" : "?";
   const params = new URLSearchParams();
   if (props.aiKind !== undefined) params.set(AI_KIND_PARAM, props.aiKind);
   if (props.aiLabel !== undefined) params.set(AI_LABEL_PARAM, props.aiLabel);
+  if (props.aiIcon !== undefined) params.set(AI_ICON_PARAM, props.aiIcon);
   return `${url}${separator}${params.toString()}`;
 }
 
@@ -143,14 +168,15 @@ export function appendAIParams(url: string, props: AITransformProps): string {
 export async function bakeBadge(
   image: Uint8Array,
   label: string,
+  icon = false,
 ): Promise<{ data: Uint8Array; width: number }> {
   const pipeline = sharp(image);
   const metadata = await pipeline.metadata();
   const width = metadata.width ?? 1000;
   const height = metadata.height ?? Math.round(width * 0.6);
 
-  const geometry = badgeGeometry(width, label);
-  const badge = Buffer.from(renderBadgeSvg(label, geometry));
+  const geometry = badgeGeometry(width, label, icon);
+  const badge = Buffer.from(renderBadgeSvg(label, geometry, icon));
 
   // `top`/`left` are absolute offsets, and Sharp ignores `gravity` whenever
   // both are supplied — so the corner has to be computed rather than named.
@@ -175,7 +201,7 @@ export async function bakeBadge(
 const service: LocalImageService = {
   ...sharpService,
 
-  propertiesToHash: [...ASTRO_DEFAULT_HASH_PROPS, AI_KIND_PARAM, AI_LABEL_PARAM],
+  propertiesToHash: [...ASTRO_DEFAULT_HASH_PROPS, AI_KIND_PARAM, AI_LABEL_PARAM, AI_ICON_PARAM],
 
   getURL(options, imageConfig) {
     const base = sharpService.getURL(options, imageConfig);
@@ -194,20 +220,28 @@ const service: LocalImageService = {
 
     const kind = url.searchParams.get(AI_KIND_PARAM);
     const label = url.searchParams.get(AI_LABEL_PARAM);
+    const icon = url.searchParams.get(AI_ICON_PARAM);
     return {
       ...parsed,
       ...(kind && { [AI_KIND_PARAM]: kind }),
       ...(label && { [AI_LABEL_PARAM]: label }),
+      ...(icon && { [AI_ICON_PARAM]: icon }),
     };
   }) as LocalImageService["parseURL"],
 
   async transform(inputBuffer, transformOptions, imageConfig) {
     const optimized = await sharpService.transform(inputBuffer, transformOptions, imageConfig);
 
-    const { aiKind, aiLabel } = readAIProps(transformOptions as unknown as Record<string, unknown>);
+    const { aiKind, aiLabel, aiIcon } = readAIProps(
+      transformOptions as unknown as Record<string, unknown>,
+    );
     if (aiKind === undefined) return optimized;
 
-    const { data } = await bakeBadge(optimized.data, aiLabel ?? defaultBakedLabel(aiKind));
+    const { data } = await bakeBadge(
+      optimized.data,
+      aiLabel ?? defaultBakedLabel(aiKind),
+      aiIcon === "eu",
+    );
     return { data, format: optimized.format };
   },
 };

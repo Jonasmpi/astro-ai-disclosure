@@ -105,7 +105,7 @@ describe("astro:config:setup", () => {
     expect(servedConfig(pluginFrom(updateConfig))).toEqual({
       policy: "all-ai",
       defaultLanguage: "de",
-      badge: { position: "top-left", mode: "overlay" },
+      badge: { position: "top-left", mode: "overlay", icon: "none" },
       labels: {
         de: {
           generated: "Von KI erzeugt",
@@ -126,7 +126,7 @@ describe("astro:config:setup", () => {
     expect(servedConfig(pluginFrom(runConfigSetup(aiDisclosure())))).toEqual({
       policy: "eu-article-50",
       defaultLanguage: "en",
-      badge: { position: "bottom-right", mode: "overlay" },
+      badge: { position: "bottom-right", mode: "overlay", icon: "none" },
       labels: DEFAULT_LABELS,
       validation: {
         missingMetadata: "error",

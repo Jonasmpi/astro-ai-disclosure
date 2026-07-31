@@ -153,6 +153,7 @@ aiDisclosure({
 | `policy`          | `"eu-article-50" \| "all-ai"`                                  | `"eu-article-50"`                         | Which declarations get a visible label.          |
 | `defaultLanguage` | `"de" \| "en"`                                                 | `"en"`                                    | Language for the built-in labels.                |
 | `labels`          | `{ de?: {…}, en?: {…} }`                                       | built-ins                                 | Deep-merged; override one string, keep the rest. |
+| `badge.icon`      | `"none" \| "eu"`                                               | `"none"`                                  | Use the official EU mark as the glyph.           |
 | `badge.mode`      | `"overlay" \| "baked"`                                         | `"overlay"`                               | Baked composites the label into the pixels.      |
 | `badge.position`  | `"top-left" \| "top-right" \| "bottom-left" \| "bottom-right"` | `"bottom-right"`                          | Badge corner.                                    |
 | `enforcement`     | `"off" \| "warn" \| "error"`                                   | `"error"`                                 | See below.                                       |
@@ -306,6 +307,27 @@ What it costs:
 
 `sharp` is an optional peer dependency, needed only for this service. Astro's default image service
 already pulls it in.
+
+## Official EU icon
+
+The Commission publishes a mark for labelling AI-generated content. Set `badge.icon: "eu"` (or
+`badgeIcon="eu"` per image) to use it in place of the built-in "AI" glyph, in both overlay and baked
+modes.
+
+> "These icons are made publicly available for everyone to use freely, without the need for
+> attribution to the Commission or the AI Office."
+>
+> "The use of these EU icons is optional, but the labelling requirements under Article 50 AI Act are
+> not."
+>
+> — [EU icons for labelling AI-generated content](https://digital-strategy.ec.europa.eu/en/policies/eu-icons-labelling-ai-generated-content)
+
+No attribution is required, so the mark is bundled directly — about 1 kB of SVG, embedded as a
+`data:` URI so its paths cannot collide with page styles.
+
+Only the basic disc is bundled. The Commission also publishes two wordmarks, "Fully AI-Generated"
+and "Partially AI-Modified", but those are 3:1 strips carrying their own text: inside a badge that
+already shows a label they would duplicate it rather than sit in it as a glyph.
 
 ## Build enforcement
 

@@ -31,6 +31,8 @@ export {
 } from "./options";
 export { VIRTUAL_CONFIG_ID } from "./virtual-config";
 export { FORBIDDEN_BINDINGS, findForbiddenImports } from "./enforcement";
+export { EU_ICON_BLACK, EU_ICON_WHITE, euIconDataUri, euIconSvg } from "./eu-icon";
+export type { EUIconVariant } from "./eu-icon";
 export {
   REPORT_FILENAME,
   buildReport,

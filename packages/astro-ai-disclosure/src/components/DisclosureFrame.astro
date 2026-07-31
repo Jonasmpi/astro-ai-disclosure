@@ -1,5 +1,5 @@
 ---
-import type { BadgeView } from "@jonasmpi/astro-ai-disclosure";
+import { type BadgeView, euIconDataUri } from "@jonasmpi/astro-ai-disclosure";
 
 /**
  * Wraps an image in the disclosure frame and renders the badge over it.
@@ -16,6 +16,10 @@ interface Props {
 }
 
 const { badge } = Astro.props;
+
+// The official mark is a self-contained data URI in an <img>, so its own paths
+// cannot collide with page styles the way an inlined <svg> would.
+const euIcon = badge.icon === "eu" ? euIconDataUri("white") : undefined;
 ---
 
 <span class:list={["ai-disclosure", `ai-disclosure--${badge.position}`]} {...badge.data}>
@@ -28,9 +32,20 @@ const { badge } = Astro.props;
         aria-label={badge.description}
         title={badge.description}
       >
-        <span aria-hidden="true" class="ai-disclosure__symbol">
-          AI
-        </span>
+        {euIcon ? (
+          <img
+            class="ai-disclosure__mark"
+            src={euIcon}
+            alt=""
+            aria-hidden="true"
+            width="16"
+            height="16"
+          />
+        ) : (
+          <span aria-hidden="true" class="ai-disclosure__symbol">
+            AI
+          </span>
+        )}
         <span>{badge.label}</span>
       </span>
     )
@@ -73,6 +88,13 @@ const { badge } = Astro.props;
     font-weight: 600;
     line-height: 1.2;
     backdrop-filter: blur(4px);
+  }
+
+  .ai-disclosure__mark {
+    display: block;
+    width: 1.45rem;
+    height: 1.45rem;
+    flex: none;
   }
 
   .ai-disclosure__symbol {

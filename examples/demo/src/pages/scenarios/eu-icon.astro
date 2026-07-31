@@ -1,0 +1,83 @@
+---
+import AIImage from "@jonasmpi/astro-ai-disclosure/AIImage.astro";
+
+import lakesideTerrace from "../../assets/lakeside-terrace.jpg";
+import ScenarioLayout from "../../layouts/ScenarioLayout.astro";
+
+const ai = {
+  kind: "generated",
+  scope: "deepfake",
+  provider: "OpenAI",
+  description: "Fictional metadata; the photograph is real",
+} as const;
+---
+
+<ScenarioLayout
+  title="Official EU icon"
+  intro="The Commission publishes a mark for labelling AI-generated content. Using it is optional; the Article 50 labelling obligation is not."
+  expectation="The badge shows the official disc instead of the built-in AI glyph, in both overlay and baked modes."
+>
+  <h2>Built-in glyph — the default</h2>
+  <AIImage
+    src={lakesideTerrace}
+    alt="Restaurant terrace above a lake at sunset"
+    widths={[480]}
+    sizes="480px"
+    format="webp"
+    ai={ai}
+  />
+
+  <h2>Official mark, overlay</h2>
+  <p class="note">
+    Embedded as a self-contained <code>data:</code> URI, so the mark's own paths cannot collide with page
+    styles.
+  </p>
+  <AIImage
+    src={lakesideTerrace}
+    alt="Restaurant terrace above a lake at sunset"
+    widths={[480]}
+    sizes="480px"
+    format="webp"
+    badgeIcon="eu"
+    ai={ai}
+  />
+
+  <h2>Official mark, baked into the pixels</h2>
+  <p class="note">Composited by the image service, so it survives downloading the file.</p>
+  <AIImage
+    src={lakesideTerrace}
+    alt="Restaurant terrace above a lake at sunset"
+    widths={[480]}
+    sizes="480px"
+    format="webp"
+    badgeIcon="eu"
+    badgeMode="baked"
+    ai={ai}
+  />
+
+  <h2>Licence</h2>
+  <p class="note">
+    Quoting the Commission: <em
+      >"These icons are made publicly available for everyone to use freely, without the need for
+      attribution to the Commission or the AI Office."</em
+    > and <em
+      >"The use of these EU icons is optional, but the labelling requirements under Article 50 AI
+      Act are not."</em
+    >
+    Only the basic disc is bundled — the two wordmarks carry their own text, which would duplicate the
+    badge's label rather than sit inside it.
+  </p>
+</ScenarioLayout>
+
+<style>
+  h2 {
+    margin-top: 2.25rem;
+    font-size: 1.05rem;
+  }
+
+  .note {
+    max-width: 46rem;
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+</style>

@@ -51,6 +51,9 @@ export type Language = "de" | "en";
  */
 export type BadgeMode = "overlay" | "baked";
 
+/** Which glyph the badge shows. */
+export type BadgeIcon = "none" | "eu";
+
 /** Where the badge sits over the image. */
 export type BadgePosition = "top-left" | "top-right" | "bottom-left" | "bottom-right";
 
@@ -125,6 +128,12 @@ export interface AIDisclosureOptions {
     position?: BadgePosition;
     /** @default "overlay" */
     mode?: BadgeMode;
+    /**
+     * `"eu"` uses the Commission's official AI mark instead of the built-in
+     * "AI" glyph. Optional under Article 50; the labelling itself is not.
+     * @default "none"
+     */
+    icon?: BadgeIcon;
   };
   /** @default "error" */
   enforcement?: EnforcementMode;
@@ -154,6 +163,7 @@ export interface ResolvedAIDisclosureConfig {
   badge: {
     position: BadgePosition;
     mode: BadgeMode;
+    icon: BadgeIcon;
   };
   enforcement: EnforcementMode;
   exclude: RegExp[];

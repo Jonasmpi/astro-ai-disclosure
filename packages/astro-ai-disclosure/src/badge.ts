@@ -1,6 +1,7 @@
 import { resolveLabel, shouldDisclose } from "./disclosure";
 import type {
   AIDisclosure,
+  BadgeIcon,
   BadgeMode,
   BadgePosition,
   DisclosurePolicy,
@@ -18,6 +19,7 @@ export interface DisclosureOverrides {
   language?: Language;
   badgePosition?: BadgePosition;
   badgeMode?: BadgeMode;
+  badgeIcon?: BadgeIcon;
 }
 
 /**
@@ -84,6 +86,8 @@ export interface BadgeView {
   position: BadgePosition;
   /** Whether the label is an overlay or composited into the pixels. */
   mode: BadgeMode;
+  /** Which glyph the badge shows. */
+  icon: BadgeIcon;
   /** Attributes for the wrapper element; present whenever metadata was given. */
   data: DisclosureDataAttributes;
 }
@@ -133,6 +137,7 @@ export function resolveBadge(
   const language = overrides.language ?? config.defaultLanguage;
   const position = overrides.badgePosition ?? config.badge.position;
   const mode = overrides.badgeMode ?? config.badge.mode;
+  const icon = overrides.badgeIcon ?? config.badge.icon;
 
   const label = resolveLabel(ai, language, config.labels);
 
@@ -142,6 +147,7 @@ export function resolveBadge(
     description: accessibleDescription(label, ai),
     position,
     mode,
+    icon,
     data: dataAttributes(ai),
   };
 }
