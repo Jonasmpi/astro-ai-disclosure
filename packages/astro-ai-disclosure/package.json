@@ -1,6 +1,6 @@
 {
   "name": "@jonasmpi/astro-ai-disclosure",
-  "version": "0.6.2",
+  "version": "0.6.3",
   "type": "module",
   "description": "Astro integration for consistent, accessible AI-disclosure labelling of images (EU AI Act Article 50 context)",
   "license": "MIT",
