@@ -1,5 +1,22 @@
 # @jonasmpi/astro-ai-disclosure
 
+## 0.6.2
+
+### Patch Changes
+
+- 208ac80: Document why the package does not emit or preserve C2PA provenance manifests.
+
+  A manifest hashes the pixel data, and Astro's ordinary resizing rewrites most of it — measured at
+  85.9% of pixel bytes for one of the demo photographs — so a preserved manifest would fail every
+  validator, reading as tampering rather than as absence. Sharp has no JUMBF support at any level, and
+  re-signing per variant would require a signing certificate in CI plus a claim about what a model
+  actually did, which this package cannot honestly make from a declaration.
+
+  No behaviour changes. Tests now pin the facts the decision rests on, so it cannot quietly go stale.
+
+- c107021: Document the per-image `badgeMode` and `badgeIcon` props, which were implemented but missing from
+  the component props table.
+
 ## 0.6.1
 
 ### Patch Changes
