@@ -6,9 +6,10 @@ obligations of **EU AI Act Article 50** in mind.
 You record what AI did to an image. The package decides whether that needs a visible label, renders
 an accessible badge when it does, and stops an unlabelled image reaching a page by accident.
 
-> **Status: pre-release, `v0.4.0` in the repository.** Components, policy modes, build enforcement,
-> sidecar metadata, validation rules and the compliance report are all implemented, covered by 314
-> tests. Publishing to npm is waiting on the npm account — see [Releasing](#releasing).
+> **Status: feature-complete, `v0.6.1` in the repository, 366 tests.** Everything the plan set out
+> is implemented: components, policy modes, build enforcement, sidecar metadata, validation rules,
+> the compliance report, baked labels and the official EU icon. Publishing to npm is waiting on the
+> npm account — see [Releasing](#releasing).
 
 ```astro
 ---
@@ -42,6 +43,8 @@ In short:
   fails; a remote image needs inline metadata, since no sidecar can describe it.
 - **Compliance report:** every build writes `dist/ai-image-disclosure-report.json` listing each
   image, its declaration, whether a badge was shown and on which pages.
+- **Baked labels:** an optional Sharp image service composites the label into the pixels, so it
+  survives the file being downloaded — with the official EU mark as an opt-in glyph.
 - Direct `astro:assets` `Image` / `Picture` imports fail the build.
 - German and English labels built in; `labels` deep-merges over them.
 
