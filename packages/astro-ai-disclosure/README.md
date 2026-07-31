@@ -361,6 +361,24 @@ The badge is plain markup with stable class names:
 } /* one per corner */
 ```
 
+### Sizing and `sizes`
+
+The frame sets `max-width: 100%` and `height: auto` on the image, so it fills whatever width the
+surrounding layout allows. That makes the `sizes` attribute your responsibility: it must describe
+the width the image **actually renders at**, not a guess. Declaring `sizes="640px"` for a slot that
+renders at 1040px makes the browser fetch a 640px source and upscale it, which looks soft — and
+nothing in the build will warn you.
+
+To constrain the frame yourself, note that Astro scopes the package's own rule with an attribute
+selector, giving it specificity `(0,2,0)`. A plain `.ai-disclosure { max-width: … }` loses to it
+silently. Either constrain the frame's parent, or match that specificity:
+
+```css
+.ai-disclosure.ai-disclosure {
+  max-width: 45rem;
+}
+```
+
 The wrapper carries `data-ai-kind`, `data-ai-scope` and, when provided, `data-ai-provider`,
 `data-ai-model` and `data-ai-created-at` — useful for auditing what a built site actually declares:
 

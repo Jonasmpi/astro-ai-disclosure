@@ -10,8 +10,8 @@ import ScenarioLayout from "../../layouts/ScenarioLayout.astro";
 // Uncomment one and run `pnpm --filter demo build`; each stops the build with a
 // message naming this image. In `astro dev`, missing metadata only warns.
 //
-//   <AIImage src={platedDish} alt="undeclared" widths={[320]} />
-//   <AIImage src={platedDish} alt="pending" widths={[320]}
+//   <AIImage src={platedDish} alt="undeclared" widths={[520, 1040, 2000]} />
+//   <AIImage src={platedDish} alt="pending" widths={[520, 1040, 2000]}
 //            ai={{ kind: "generated", scope: "review-required" }} />
 //   <AIImage src="https://example.com/photo.jpg" alt="remote" width={320} height={240} />
 // ---------------------------------------------------------------------------
@@ -99,8 +99,8 @@ const rules = [
   <AIImage
     src={platedDish}
     alt="A plated dish on a restaurant table"
-    widths={[480]}
-    sizes="480px"
+    widths={[520, 1040, 2000]}
+    sizes="(max-width: 68rem) calc(100vw - 3rem), 1040px"
     format="webp"
     ai={{ kind: "none", scope: "not-in-scope" }}
   />

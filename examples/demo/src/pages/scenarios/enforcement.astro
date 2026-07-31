@@ -52,8 +52,8 @@ const optimized = await getImage({ src: platedDish, width: 320, format: "webp" }
   <AIImage
     src={platedDish}
     alt="A plated dish on a restaurant table"
-    widths={[640]}
-    sizes="640px"
+    widths={[520, 1040, 2000]}
+    sizes="(max-width: 68rem) calc(100vw - 3rem), 1040px"
     format="webp"
     ai={{ kind: "assisted", scope: "not-in-scope", description: "Colour correction" }}
   />
