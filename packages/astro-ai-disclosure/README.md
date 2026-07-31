@@ -153,6 +153,7 @@ aiDisclosure({
 | `policy`          | `"eu-article-50" \| "all-ai"`                                  | `"eu-article-50"`                         | Which declarations get a visible label.          |
 | `defaultLanguage` | `"de" \| "en"`                                                 | `"en"`                                    | Language for the built-in labels.                |
 | `labels`          | `{ de?: {…}, en?: {…} }`                                       | built-ins                                 | Deep-merged; override one string, keep the rest. |
+| `badge.mode`      | `"overlay" \| "baked"`                                         | `"overlay"`                               | Baked composites the label into the pixels.      |
 | `badge.position`  | `"top-left" \| "top-right" \| "bottom-left" \| "bottom-right"` | `"bottom-right"`                          | Badge corner.                                    |
 | `enforcement`     | `"off" \| "warn" \| "error"`                                   | `"error"`                                 | See below.                                       |
 | `exclude`         | `RegExp[]`                                                     | `[]`                                      | Files exempt from enforcement.                   |
@@ -275,6 +276,36 @@ is worth a look.
 
 Entries are sorted, so two builds of the same site produce identical files and the report can be
 committed or diffed as compliance evidence.
+
+## Baked labels
+
+An overlay badge is CSS over the image, so it disappears the moment someone downloads or re-shares
+the file. Baked mode composites the label into the pixels instead:
+
+```ts
+// astro.config.ts
+export default defineConfig({
+  image: { service: { entrypoint: "@jonasmpi/astro-ai-disclosure/image-service" } },
+  integrations: [aiDisclosure({ badge: { mode: "baked" } })],
+});
+```
+
+Per image: `<AIImage src={hero} alt="…" badgeMode="baked" ai={…} />`.
+
+The service wraps Astro's Sharp service, so images without a baked label pass through the normal
+pipeline untouched. The label is drawn once per responsive width and scaled to the variant it sits
+on, so it stays legible at 320px and does not dominate at 1920px.
+
+What it costs:
+
+- It needs **this** image service. External providers (Cloudinary, Vercel) cannot composite, and the
+  props are silently ignored — nothing gets labelled.
+- Each labelled variant is a separate cached file, so a build generates more images.
+- The label is not selectable text and cannot be restyled per breakpoint.
+- `badgePosition` does not apply; baked labels sit bottom-right.
+
+`sharp` is an optional peer dependency, needed only for this service. Astro's default image service
+already pulls it in.
 
 ## Build enforcement
 

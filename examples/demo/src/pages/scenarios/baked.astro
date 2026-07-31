@@ -1,0 +1,73 @@
+---
+import AIImage from "@jonasmpi/astro-ai-disclosure/AIImage.astro";
+
+import lakesideTerrace from "../../assets/lakeside-terrace.jpg";
+import ScenarioLayout from "../../layouts/ScenarioLayout.astro";
+
+const ai = {
+  kind: "generated",
+  scope: "deepfake",
+  provider: "OpenAI",
+  description: "Fictional metadata; the photograph is real",
+} as const;
+---
+
+<ScenarioLayout
+  title="Baked labels"
+  intro="An overlay badge is CSS over the image, so it vanishes the moment someone downloads or re-shares the file. Baked mode composites the label into the pixels instead."
+  expectation="Both images carry a label. Right-click and save each: only the baked one still shows it, because its label is part of the image data."
+>
+  <h2>Overlay — the default</h2>
+  <p class="note">
+    A <code>&lt;span&gt;</code> positioned over the image. Styleable, works with any image service, and
+    gone as soon as the file leaves the page.
+  </p>
+  <AIImage
+    src={lakesideTerrace}
+    alt="Restaurant terrace above a lake at sunset"
+    widths={[480, 960]}
+    sizes="(max-width: 768px) 100vw, 480px"
+    format="webp"
+    badgeMode="overlay"
+    ai={ai}
+  />
+
+  <h2>Baked — composited into the pixels</h2>
+  <p class="note">
+    The label is drawn into the image by the Sharp service, once per responsive width, scaled to the
+    variant it sits on. Save this one and the label comes with it.
+  </p>
+  <AIImage
+    src={lakesideTerrace}
+    alt="Restaurant terrace above a lake at sunset"
+    widths={[480, 960]}
+    sizes="(max-width: 768px) 100vw, 480px"
+    format="webp"
+    badgeMode="baked"
+    ai={ai}
+  />
+
+  <h2>What it costs</h2>
+  <ul>
+    <li>Requires this package's image service — external providers cannot composite.</li>
+    <li>Each label variant is its own cached file, so more images are generated.</li>
+    <li>The label is not selectable text and cannot be restyled per breakpoint.</li>
+    <li>
+      The overlay's <code>badgePosition</code> does not apply; baked labels always sit bottom-right.
+    </li>
+  </ul>
+</ScenarioLayout>
+
+<style>
+  h2 {
+    margin-top: 2.25rem;
+    font-size: 1.05rem;
+  }
+
+  .note,
+  ul {
+    max-width: 46rem;
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+</style>

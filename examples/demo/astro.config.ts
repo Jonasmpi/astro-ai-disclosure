@@ -8,6 +8,12 @@ import { defineConfig } from "astro/config";
 // Package defaults are: policy "eu-article-50", defaultLanguage "en",
 // badge.position "bottom-right", enforcement "error".
 export default defineConfig({
+  // Routes every image through this package's Sharp service, which composites
+  // the label into the pixels when a component asks for baked mode. Images
+  // without the custom props pass straight through the default pipeline.
+  image: {
+    service: { entrypoint: "@jonasmpi/astro-ai-disclosure/image-service" },
+  },
   integrations: [
     aiDisclosure({
       policy: "all-ai",

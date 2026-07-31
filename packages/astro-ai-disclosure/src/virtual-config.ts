@@ -28,6 +28,15 @@ export const VIRTUAL_CONFIG_TYPES = `declare module "${VIRTUAL_CONFIG_ID}" {
   const config: import("@jonasmpi/astro-ai-disclosure/types").VirtualDisclosureConfig;
   export default config;
 }
+
+// Lets \`<Image>\` accept the props this package's image service reads in baked
+// mode. Astro types custom image props through this interface.
+declare namespace Astro {
+  interface CustomImageProps {
+    aiKind?: import("@jonasmpi/astro-ai-disclosure/types").DisclosableKind;
+    aiLabel?: string;
+  }
+}
 `;
 
 /**

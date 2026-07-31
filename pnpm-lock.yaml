@@ -63,6 +63,9 @@ importers:
       astro:
         specifier: ^7.1.6
         version: 7.1.6(@emnapi/core@2.0.0-alpha.3)(@emnapi/runtime@2.0.0-alpha.3)(@types/node@26.1.2)(rollup@4.62.3)(yaml@2.9.0)
+      sharp:
+        specifier: ^0.35.3
+        version: 0.35.3(@types/node@26.1.2)
       tsup:
         specifier: ^8.5.1
         version: 8.5.1(postcss@8.5.24)(supports-color@7.2.0)(typescript@5.9.3)(yaml@2.9.0)
