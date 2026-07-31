@@ -6,7 +6,15 @@ obligations of **EU AI Act Article 50** in mind.
 You record what AI did to an image. The package decides whether that needs a visible label, renders
 an accessible badge when it does, and stops an unlabelled image reaching a page by accident.
 
-> **Status: feature-complete, `v0.6.1` in the repository, 366 tests.** Everything the plan set out
+It grew out of a concrete need: labelling AI-assisted imagery consistently across
+[nAIxt Technologies](https://naixt-technologies.de), an Astro site that had the same problem every
+Article 50 deployer has. Rather than solve it once in one codebase, it became a package anyone can
+use.
+
+**Development disclosure.** This package was built with the support of AI coding tools. That seemed
+worth stating plainly in a project about disclosing AI involvement.
+
+> **Status: feature-complete, `v0.6.3` in the repository, 371 tests.** Everything the plan set out
 > is implemented: components, policy modes, build enforcement, sidecar metadata, validation rules,
 > the compliance report, baked labels and the official EU icon. Publishing to npm is waiting on the
 > npm account — see [Releasing](#releasing).
