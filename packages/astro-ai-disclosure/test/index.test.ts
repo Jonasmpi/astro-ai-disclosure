@@ -113,6 +113,11 @@ describe("astro:config:setup", () => {
         },
         en: DEFAULT_LABELS.en,
       },
+      validation: {
+        missingMetadata: "error",
+        reviewRequired: "error",
+        remoteImages: "require-explicit-metadata",
+      },
     });
   });
 
@@ -122,6 +127,11 @@ describe("astro:config:setup", () => {
       defaultLanguage: "en",
       badge: { position: "bottom-right" },
       labels: DEFAULT_LABELS,
+      validation: {
+        missingMetadata: "error",
+        reviewRequired: "error",
+        remoteImages: "require-explicit-metadata",
+      },
     });
   });
 

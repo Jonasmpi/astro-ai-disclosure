@@ -25,6 +25,11 @@ const config = {
           defaultLanguage: "de",
           badge: { position: "top-left" },
           labels: { de: { generated: "Von KI erzeugt" } },
+          // Render tests deliberately render undeclared and review-required
+          // images to compare markup; the rules would abort them. Validation
+          // has its own unit tests plus an end-to-end check on the demo build.
+          missingMetadata: "off",
+          reviewRequired: "off",
         }),
       ),
     ),

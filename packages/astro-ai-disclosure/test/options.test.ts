@@ -18,6 +18,11 @@ describe("resolveOptions — defaults", () => {
       badge: { position: "bottom-right" },
       enforcement: "error",
       exclude: [],
+      validation: {
+        missingMetadata: { development: "warn", build: "error" },
+        reviewRequired: { development: "error", build: "error" },
+        remoteImages: "require-explicit-metadata",
+      },
     });
   });
 
@@ -51,6 +56,11 @@ describe("resolveOptions — accepted values", () => {
       badge: { position: "top-left" },
       enforcement: "warn",
       exclude,
+      validation: {
+        missingMetadata: { development: "warn", build: "error" },
+        reviewRequired: { development: "error", build: "error" },
+        remoteImages: "require-explicit-metadata",
+      },
     });
   });
 
@@ -179,6 +189,11 @@ describe("toVirtualConfig", () => {
       defaultLanguage: "de",
       labels: DEFAULT_LABELS,
       badge: { position: "bottom-right" },
+      validation: {
+        missingMetadata: "error",
+        reviewRequired: "error",
+        remoteImages: "require-explicit-metadata",
+      },
     });
   });
 

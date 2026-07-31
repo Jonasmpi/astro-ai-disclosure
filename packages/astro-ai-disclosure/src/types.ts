@@ -74,8 +74,33 @@ export type PartialLabels = {
   [L in Language]?: Partial<LabelSet>;
 };
 
-/** What to do when a direct `astro:assets` import is found (wired up in step 1.5). */
+/** What to do when a direct `astro:assets` import is found. */
 export type EnforcementMode = "off" | "warn" | "error";
+
+/** How loudly a validation rule complains. */
+export type ValidationSeverity = "off" | "warn" | "error";
+
+/** The two situations a rule can be configured for separately. */
+export type ValidationMode = "development" | "build";
+
+/**
+ * A rule's setting: one severity for both modes, or one per mode.
+ *
+ * Per-mode exists because the useful defaults differ. An image whose metadata
+ * is still missing should not stop you working in dev, but must stop a release.
+ */
+export type ValidationRule =
+  ValidationSeverity | Partial<Record<ValidationMode, ValidationSeverity>>;
+
+/** What to do about remote images, which no sidecar can describe. */
+export type RemoteImagePolicy = "allow" | "require-explicit-metadata";
+
+/** Validation settings after per-mode rules are collapsed for the current run. */
+export interface ResolvedValidationRules {
+  missingMetadata: ValidationSeverity;
+  reviewRequired: ValidationSeverity;
+  remoteImages: RemoteImagePolicy;
+}
 
 /** Options accepted by the integration. Every field has a default. */
 export interface AIDisclosureOptions {
@@ -93,6 +118,20 @@ export interface AIDisclosureOptions {
   enforcement?: EnforcementMode;
   /** Files exempt from enforcement. */
   exclude?: RegExp[];
+  /**
+   * An image with neither an inline `ai` prop nor a sidecar.
+   * @default { development: "warn", build: "error" }
+   */
+  missingMetadata?: ValidationRule;
+  /**
+   * An image still declared `scope: "review-required"`.
+   * @default "error"
+   */
+  reviewRequired?: ValidationRule;
+  /**
+   * @default "require-explicit-metadata"
+   */
+  remoteImages?: RemoteImagePolicy;
 }
 
 /** Options after defaults are applied and every value is validated. */
@@ -105,6 +144,12 @@ export interface ResolvedAIDisclosureConfig {
   };
   enforcement: EnforcementMode;
   exclude: RegExp[];
+  /** Per-mode severities, collapsed for a given run by `toVirtualConfig`. */
+  validation: {
+    missingMetadata: Record<ValidationMode, ValidationSeverity>;
+    reviewRequired: Record<ValidationMode, ValidationSeverity>;
+    remoteImages: RemoteImagePolicy;
+  };
 }
 
 /**
@@ -118,7 +163,10 @@ export interface ResolvedAIDisclosureConfig {
 export type VirtualDisclosureConfig = Pick<
   ResolvedAIDisclosureConfig,
   "policy" | "defaultLanguage" | "labels" | "badge"
->;
+> & {
+  /** Already collapsed for the mode this build is running in. */
+  validation: ResolvedValidationRules;
+};
 
 /**
  * Sidecar metadata keyed by the absolute path of the image it describes — the

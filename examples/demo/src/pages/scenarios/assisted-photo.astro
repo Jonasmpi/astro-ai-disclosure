@@ -49,10 +49,11 @@ const ai = {
     ai={ai}
   />
 
-  <h2>No metadata at all — no badge, no attributes</h2>
+  <h2>An explicit "no AI" declaration — no badge, but recorded</h2>
   <p class="note">
-    An <code>AIImage</code> without an <code>ai</code> prop renders a plain image. Step 2.2 turns this
-    silence into a warning in dev and a build failure.
+    Declaring <code>kind: "none"</code> states that no AI was involved. That is different from saying
+    nothing: since step 2.2, an image with no declaration at all warns in dev and
+    <strong>fails the build</strong>. See the <a href="/scenarios/validation">validation page</a>.
   </p>
   <AIImage
     src={platedDish}
@@ -60,6 +61,7 @@ const ai = {
     widths={[640]}
     sizes="640px"
     format="webp"
+    ai={{ kind: "none", scope: "not-in-scope" }}
   />
 </ScenarioLayout>
 

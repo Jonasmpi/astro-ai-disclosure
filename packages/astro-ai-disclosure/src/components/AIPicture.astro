@@ -1,5 +1,10 @@
 ---
-import { resolveBadge, resolveDisclosure } from "@jonasmpi/astro-ai-disclosure";
+import {
+  reportIssue,
+  resolveBadge,
+  resolveDisclosure,
+  validateDisclosure,
+} from "@jonasmpi/astro-ai-disclosure";
 import type {
   AIDisclosure,
   BadgePosition,
@@ -34,6 +39,10 @@ const { ai, policy, language, badgePosition, class: imageClass, ...pictureProps 
 // An inline `ai` prop wins; otherwise the sidecar manifest is consulted,
 // matched on the image's own absolute path.
 const disclosure = resolveDisclosure(ai, pictureProps.src, manifest);
+
+// Throws for a rule set to `error`, warns for `warn`. The severities are
+// already collapsed for the current command by the integration.
+reportIssue(validateDisclosure(disclosure, pictureProps.src, config.validation));
 
 const badge = resolveBadge({ ai: disclosure, policy, language, badgePosition }, config);
 ---
