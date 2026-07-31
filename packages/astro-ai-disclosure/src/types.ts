@@ -119,3 +119,9 @@ export type VirtualDisclosureConfig = Pick<
   ResolvedAIDisclosureConfig,
   "policy" | "defaultLanguage" | "labels" | "badge"
 >;
+
+/**
+ * Sidecar metadata keyed by the absolute path of the image it describes — the
+ * shape of `virtual:ai-image-manifest`.
+ */
+export type AIImageManifest = Record<string, AIDisclosure>;

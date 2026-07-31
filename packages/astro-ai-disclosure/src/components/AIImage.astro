@@ -1,5 +1,5 @@
 ---
-import { resolveBadge } from "@jonasmpi/astro-ai-disclosure";
+import { resolveBadge, resolveDisclosure } from "@jonasmpi/astro-ai-disclosure";
 import type {
   AIDisclosure,
   BadgePosition,
@@ -8,6 +8,7 @@ import type {
 } from "@jonasmpi/astro-ai-disclosure/types";
 import { Image } from "astro:assets";
 import type { ComponentProps } from "astro/types";
+import manifest from "virtual:ai-image-manifest";
 import config from "virtual:astro-ai-disclosure/config";
 
 import DisclosureFrame from "./DisclosureFrame.astro";
@@ -29,7 +30,11 @@ type Props = AstroImageProps & {
 
 const { ai, policy, language, badgePosition, class: imageClass, ...imageProps } = Astro.props;
 
-const badge = resolveBadge({ ai, policy, language, badgePosition }, config);
+// An inline `ai` prop wins; otherwise the sidecar manifest is consulted,
+// matched on the image's own absolute path.
+const disclosure = resolveDisclosure(ai, imageProps.src, manifest);
+
+const badge = resolveBadge({ ai: disclosure, policy, language, badgePosition }, config);
 ---
 
 <DisclosureFrame badge={badge}>
