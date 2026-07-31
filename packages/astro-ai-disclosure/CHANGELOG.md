@@ -1,5 +1,18 @@
 # @jonasmpi/astro-ai-disclosure
 
+## 0.6.1
+
+### Patch Changes
+
+- 4b5bba0: Fix images rendering squashed inside the disclosure frame.
+
+  The frame styled images with `max-width: 100%` but no `height: auto`. Astro emits intrinsic `width`
+  and `height` attributes on every `<Image>`, so in any column narrower than the image's natural width
+  the rendered height stayed pinned to the attribute and the picture was vertically compressed — which
+  also made it look soft.
+
+  This affected every `AIImage` and `AIPicture` since the components were introduced.
+
 ## 0.6.0
 
 ### Minor Changes
