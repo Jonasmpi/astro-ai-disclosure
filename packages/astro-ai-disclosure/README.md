@@ -148,14 +148,17 @@ aiDisclosure({
 });
 ```
 
-| Option            | Type                                                           | Default           | Notes                                            |
-| ----------------- | -------------------------------------------------------------- | ----------------- | ------------------------------------------------ |
-| `policy`          | `"eu-article-50" \| "all-ai"`                                  | `"eu-article-50"` | Which declarations get a visible label.          |
-| `defaultLanguage` | `"de" \| "en"`                                                 | `"en"`            | Language for the built-in labels.                |
-| `labels`          | `{ de?: {…}, en?: {…} }`                                       | built-ins         | Deep-merged; override one string, keep the rest. |
-| `badge.position`  | `"top-left" \| "top-right" \| "bottom-left" \| "bottom-right"` | `"bottom-right"`  | Badge corner.                                    |
-| `enforcement`     | `"off" \| "warn" \| "error"`                                   | `"error"`         | See below.                                       |
-| `exclude`         | `RegExp[]`                                                     | `[]`              | Files exempt from enforcement.                   |
+| Option            | Type                                                           | Default                                   | Notes                                            |
+| ----------------- | -------------------------------------------------------------- | ----------------------------------------- | ------------------------------------------------ |
+| `policy`          | `"eu-article-50" \| "all-ai"`                                  | `"eu-article-50"`                         | Which declarations get a visible label.          |
+| `defaultLanguage` | `"de" \| "en"`                                                 | `"en"`                                    | Language for the built-in labels.                |
+| `labels`          | `{ de?: {…}, en?: {…} }`                                       | built-ins                                 | Deep-merged; override one string, keep the rest. |
+| `badge.position`  | `"top-left" \| "top-right" \| "bottom-left" \| "bottom-right"` | `"bottom-right"`                          | Badge corner.                                    |
+| `enforcement`     | `"off" \| "warn" \| "error"`                                   | `"error"`                                 | See below.                                       |
+| `exclude`         | `RegExp[]`                                                     | `[]`                                      | Files exempt from enforcement.                   |
+| `missingMetadata` | severity, or `{ development?, build? }`                        | `{ development: "warn", build: "error" }` | Image with no declaration at all.                |
+| `reviewRequired`  | severity, or `{ development?, build? }`                        | `"error"`                                 | Declaration still says `review-required`.        |
+| `remoteImages`    | `"allow" \| "require-explicit-metadata"`                       | `"require-explicit-metadata"`             | Remote `src` with no inline `ai`.                |
 
 Options are validated when the Astro config is read, so a typo fails immediately with a message
 naming the option, the value received and the allowed set — rather than being silently ignored.
@@ -181,6 +184,63 @@ Both components accept everything their `astro:assets` counterpart does, plus:
 
 `AIDisclosure` fields: `kind` and `scope` (both required), plus optional `provider`, `model`,
 `createdAt`, `description` and `label`. A `label` overrides the generated badge text.
+
+## Sidecar metadata
+
+Declaring an image on every usage gets repetitive. Put a `.ai.json` next to the asset instead and
+every usage picks it up:
+
+```text
+src/assets/hero.webp
+src/assets/hero.webp.ai.json
+```
+
+```json
+{ "kind": "generated", "scope": "deepfake", "provider": "OpenAI", "model": "GPT Image" }
+```
+
+```astro
+<AIImage src={hero} alt="…" />
+<!-- no ai prop needed -->
+```
+
+An inline `ai` prop still wins, so a page can say something more specific about one usage. Sidecars
+are matched to images by absolute source path, so `blog/hero.jpg` and `about/hero.jpg` keep separate
+declarations. Editing one during `astro dev` takes effect without a restart.
+
+A malformed sidecar — unknown `kind` or `scope`, a misspelled field, invalid JSON — stops the build
+and names the file. A declaration the author got wrong is worse than none.
+
+## Validation
+
+Declaring nothing is not the same as declaring no AI, and these rules keep the difference honest:
+
+| Rule              | Fires when                                  | dev     | build                  |
+| ----------------- | ------------------------------------------- | ------- | ---------------------- |
+| `missingMetadata` | No inline `ai` prop and no sidecar          | `warn`  | `error`                |
+| `reviewRequired`  | Declaration says `scope: "review-required"` | `error` | `error`                |
+| `remoteImages`    | Remote `src` with no inline `ai`            | \-      | error unless `"allow"` |
+
+`missingMetadata` differs by mode deliberately: an image you have not got round to declaring should
+not interrupt you mid-edit, but it must not reach production. Each rule takes a bare severity or a
+per-mode object:
+
+```ts
+aiDisclosure({
+  missingMetadata: { development: "warn", build: "error" }, // the default
+  reviewRequired: "error",
+  remoteImages: "require-explicit-metadata",
+});
+```
+
+To satisfy the rule for an image with no AI involvement, say so:
+
+```astro
+<AIImage src={photo} alt="…" ai={{ kind: "none", scope: "not-in-scope" }} />
+```
+
+Remote images get their own rule because the fix differs — a sidecar cannot describe a file that is
+not on disk, so the metadata has to be inline.
 
 ## Build enforcement
 

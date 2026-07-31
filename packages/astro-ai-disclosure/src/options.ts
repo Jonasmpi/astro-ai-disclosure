@@ -8,7 +8,11 @@ import type {
   Labels,
   Language,
   PartialLabels,
+  RemoteImagePolicy,
   ResolvedAIDisclosureConfig,
+  ValidationMode,
+  ValidationRule,
+  ValidationSeverity,
   VirtualDisclosureConfig,
 } from "./types";
 
@@ -21,6 +25,28 @@ const BADGE_POSITIONS = [
   "bottom-right",
 ] as const satisfies readonly BadgePosition[];
 const ENFORCEMENT_MODES = ["off", "warn", "error"] as const satisfies readonly EnforcementMode[];
+const SEVERITIES = ["off", "warn", "error"] as const satisfies readonly ValidationSeverity[];
+const REMOTE_POLICIES = [
+  "allow",
+  "require-explicit-metadata",
+] as const satisfies readonly RemoteImagePolicy[];
+const VALIDATION_MODES = ["development", "build"] as const satisfies readonly ValidationMode[];
+
+/**
+ * Default validation severities.
+ *
+ * `missingMetadata` differs by mode on purpose: an undeclared image should not
+ * interrupt you mid-edit, but it must not reach production either.
+ */
+export const DEFAULT_VALIDATION = {
+  missingMetadata: { development: "warn", build: "error" },
+  reviewRequired: { development: "error", build: "error" },
+  remoteImages: "require-explicit-metadata",
+} as const satisfies {
+  missingMetadata: Record<ValidationMode, ValidationSeverity>;
+  reviewRequired: Record<ValidationMode, ValidationSeverity>;
+  remoteImages: RemoteImagePolicy;
+};
 
 /** Defaults applied to any option the consumer leaves out. */
 export const DEFAULT_OPTIONS = {
@@ -159,15 +185,80 @@ export function resolveOptions(options: AIDisclosureOptions = {}): ResolvedAIDis
       DEFAULT_OPTIONS.enforcement,
     ),
     exclude: resolveExclude(options.exclude),
+    validation: {
+      missingMetadata: resolveValidationRule(
+        options.missingMetadata,
+        "missingMetadata",
+        DEFAULT_VALIDATION.missingMetadata,
+      ),
+      reviewRequired: resolveValidationRule(
+        options.reviewRequired,
+        "reviewRequired",
+        DEFAULT_VALIDATION.reviewRequired,
+      ),
+      remoteImages: oneOf(
+        options.remoteImages,
+        REMOTE_POLICIES,
+        "remoteImages",
+        DEFAULT_VALIDATION.remoteImages,
+      ),
+    },
+  };
+}
+
+/**
+ * Expands a rule into a severity per mode. A bare string applies to both.
+ */
+export function resolveValidationRule(
+  rule: ValidationRule | undefined,
+  option: string,
+  fallback: Record<ValidationMode, ValidationSeverity>,
+): Record<ValidationMode, ValidationSeverity> {
+  if (rule === undefined) return { ...fallback };
+
+  if (typeof rule === "string") {
+    const severity = oneOf(rule, SEVERITIES, option, fallback.build);
+    return { development: severity, build: severity };
+  }
+
+  if (typeof rule !== "object" || rule === null || Array.isArray(rule)) {
+    throw new AIDisclosureConfigError(
+      `Invalid \`${option}\`: expected ${quote(SEVERITIES)} or an object keyed by ${quote(
+        VALIDATION_MODES,
+      )}.`,
+    );
+  }
+
+  for (const key of Object.keys(rule)) {
+    if (!(VALIDATION_MODES as readonly string[]).includes(key)) {
+      throw new AIDisclosureConfigError(
+        `Unknown key \`${option}.${key}\`. Expected ${quote(VALIDATION_MODES)}.`,
+      );
+    }
+  }
+
+  return {
+    development: oneOf(rule.development, SEVERITIES, `${option}.development`, fallback.development),
+    build: oneOf(rule.build, SEVERITIES, `${option}.build`, fallback.build),
   };
 }
 
 /** Narrows the resolved config to what components need at runtime. */
-export function toVirtualConfig(config: ResolvedAIDisclosureConfig): VirtualDisclosureConfig {
+export function toVirtualConfig(
+  config: ResolvedAIDisclosureConfig,
+  mode: ValidationMode = "build",
+): VirtualDisclosureConfig {
   return {
     policy: config.policy,
     defaultLanguage: config.defaultLanguage,
     labels: config.labels,
     badge: { position: config.badge.position },
+    // Collapsed here rather than in the component: the integration knows which
+    // command Astro is running, and a component should not have to guess.
+    validation: {
+      missingMetadata: config.validation.missingMetadata[mode],
+      reviewRequired: config.validation.reviewRequired[mode],
+      remoteImages: config.validation.remoteImages,
+    },
   };
 }

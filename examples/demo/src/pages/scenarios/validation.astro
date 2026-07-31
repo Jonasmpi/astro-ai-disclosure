@@ -1,0 +1,150 @@
+---
+import AIImage from "@jonasmpi/astro-ai-disclosure/AIImage.astro";
+import config from "virtual:astro-ai-disclosure/config";
+
+import platedDish from "../../assets/plated-dish.jpg";
+import ScenarioLayout from "../../layouts/ScenarioLayout.astro";
+
+// ---------------------------------------------------------------------------
+// MANUAL REPROS for the three validation rules (step 2.2).
+// Uncomment one and run `pnpm --filter demo build`; each stops the build with a
+// message naming this image. In `astro dev`, missing metadata only warns.
+//
+//   <AIImage src={platedDish} alt="undeclared" widths={[320]} />
+//   <AIImage src={platedDish} alt="pending" widths={[320]}
+//            ai={{ kind: "generated", scope: "review-required" }} />
+//   <AIImage src="https://example.com/photo.jpg" alt="remote" width={320} height={240} />
+// ---------------------------------------------------------------------------
+
+const rules = [
+  {
+    rule: "missingMetadata",
+    when: "An image has neither an inline ai prop nor a sidecar.",
+    dev: "warn",
+    build: "error",
+    effective: config.validation.missingMetadata,
+  },
+  {
+    rule: "reviewRequired",
+    when: 'A declaration still says scope: "review-required".',
+    dev: "error",
+    build: "error",
+    effective: config.validation.reviewRequired,
+  },
+  {
+    rule: "remoteImages",
+    when: "A remote src has no inline metadata; no sidecar can describe it.",
+    dev: "require-explicit-metadata",
+    build: "require-explicit-metadata",
+    effective: config.validation.remoteImages,
+  },
+] as const;
+---
+
+<ScenarioLayout
+  title="Metadata validation"
+  intro="Declaring nothing is not the same as declaring no AI. These rules make an undeclared image impossible to ship by accident, while staying out of the way during development."
+  expectation="This page builds cleanly — every image on it is declared. Its frontmatter holds three commented-out repros, one per rule."
+>
+  <h2>The rules</h2>
+  <table>
+    <thead>
+      <tr><th>Rule</th><th>Fires when</th><th>dev</th><th>build</th><th>here</th></tr>
+    </thead>
+    <tbody>
+      {
+        rules.map((entry) => (
+          <tr>
+            <td>
+              <code>{entry.rule}</code>
+            </td>
+            <td>{entry.when}</td>
+            <td>
+              <code>{entry.dev}</code>
+            </td>
+            <td>
+              <code>{entry.build}</code>
+            </td>
+            <td>
+              <code>{entry.effective}</code>
+            </td>
+          </tr>
+        ))
+      }
+    </tbody>
+  </table>
+  <p class="note">
+    The "here" column is what this build actually runs with, read from the virtual config. The
+    integration collapses the per-mode setting for the current command, so a component never has to
+    guess which mode it is in.
+  </p>
+
+  <h2>Why missing metadata differs by mode</h2>
+  <p class="note">
+    An image you have not got round to declaring should not interrupt you mid-edit, but it must not
+    reach production. Hence <code>warn</code> in dev and <code>error</code> in a build — a default you
+    can override per mode:
+  </p>
+  <pre><code>{`aiDisclosure({
+  missingMetadata: { development: "warn", build: "error" },  // the default
+  reviewRequired: "error",
+  remoteImages: "require-explicit-metadata",
+})`}</code></pre>
+
+  <h2>Declaring "no AI" is a declaration</h2>
+  <p class="note">
+    <code>{'{ kind: "none", scope: "not-in-scope" }'}</code> satisfies the rule and renders no badge.
+    Silence does not.
+  </p>
+  <AIImage
+    src={platedDish}
+    alt="A plated dish on a restaurant table"
+    widths={[480]}
+    sizes="480px"
+    format="webp"
+    ai={{ kind: "none", scope: "not-in-scope" }}
+  />
+</ScenarioLayout>
+
+<style>
+  h2 {
+    margin-top: 2.25rem;
+    font-size: 1.05rem;
+  }
+
+  .note {
+    max-width: 46rem;
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+
+  table {
+    width: 100%;
+    max-width: 52rem;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+  }
+
+  th,
+  td {
+    padding: 0.4rem 0.55rem;
+    border-bottom: 1px solid var(--border);
+    text-align: left;
+    vertical-align: top;
+  }
+
+  th {
+    color: var(--muted);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+  }
+
+  pre {
+    max-width: 46rem;
+    padding: 0.9rem 1.1rem;
+    overflow-x: auto;
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    font-size: 0.85rem;
+  }
+</style>
