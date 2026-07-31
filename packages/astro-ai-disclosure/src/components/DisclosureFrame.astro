@@ -65,6 +65,10 @@ const euIcon = badge.icon === "eu" ? euIconDataUri("white") : undefined;
   .ai-disclosure :global(img) {
     display: block;
     max-width: 100%;
+    /* Load-bearing. Astro emits intrinsic width/height attributes; a
+       constrained column would otherwise keep the attribute height and squash
+       the image. */
+    height: auto;
   }
 
   .ai-disclosure :global(picture) {
