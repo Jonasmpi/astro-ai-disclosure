@@ -9,6 +9,7 @@ import {
 } from "@jonasmpi/astro-ai-disclosure";
 import type {
   AIDisclosure,
+  BadgeIcon,
   BadgeMode,
   BadgePosition,
   DisclosurePolicy,
@@ -35,6 +36,7 @@ type Props = AstroImageProps & {
   language?: Language;
   badgePosition?: BadgePosition;
   badgeMode?: BadgeMode;
+  badgeIcon?: BadgeIcon;
 };
 
 const {
@@ -43,6 +45,7 @@ const {
   language,
   badgePosition,
   badgeMode,
+  badgeIcon,
   class: imageClass,
   ...imageProps
 } = Astro.props;
@@ -55,7 +58,10 @@ const disclosure = resolveDisclosure(ai, imageProps.src, manifest);
 // already collapsed for the current command by the integration.
 reportIssue(validateDisclosure(disclosure, imageProps.src, config.validation));
 
-const badge = resolveBadge({ ai: disclosure, policy, language, badgePosition, badgeMode }, config);
+const badge = resolveBadge(
+  { ai: disclosure, policy, language, badgePosition, badgeMode, badgeIcon },
+  config,
+);
 
 // In baked mode the label is composited into the pixels by the image service,
 // so the overlay must not also render it. The custom props reach the service
@@ -80,5 +86,6 @@ recordDisclosure({
     class={imageClass}
     aiKind={baked ? disclosure!.kind : undefined}
     aiLabel={baked ? badge.label : undefined}
+    aiIcon={baked && badge.icon === "eu" ? "eu" : undefined}
   />
 </DisclosureFrame>

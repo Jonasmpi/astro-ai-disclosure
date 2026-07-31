@@ -6,6 +6,7 @@ import sharp from "sharp";
 import { describe, expect, it } from "vitest";
 
 import service, {
+  AI_ICON_PARAM,
   AI_KIND_PARAM,
   AI_LABEL_PARAM,
   ASTRO_DEFAULT_HASH_PROPS,
@@ -73,7 +74,12 @@ describe("propertiesToHash", () => {
     const astroDefault = [...match![1]!.matchAll(/"([^"]+)"/g)].map((entry) => entry[1]);
     expect(astroDefault.length).toBeGreaterThan(0);
     expect([...ASTRO_DEFAULT_HASH_PROPS]).toEqual(astroDefault);
-    expect(service.propertiesToHash).toEqual([...astroDefault, AI_KIND_PARAM, AI_LABEL_PARAM]);
+    expect(service.propertiesToHash).toEqual([
+      ...astroDefault,
+      AI_KIND_PARAM,
+      AI_LABEL_PARAM,
+      AI_ICON_PARAM,
+    ]);
   });
 
   it("keeps the properties that distinguish otherwise-identical transforms", () => {
