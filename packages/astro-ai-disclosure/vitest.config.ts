@@ -2,6 +2,7 @@ import { getViteConfig } from "astro/config";
 import type { ViteUserConfig } from "vitest/config";
 
 import { resolveOptions, toVirtualConfig } from "./src/options";
+import { manifestPlugin } from "./src/manifest";
 import { virtualConfigPlugin } from "./src/virtual-config";
 
 /**
@@ -27,7 +28,25 @@ const config = {
         }),
       ),
     ),
+    // Render tests import components, which import the manifest module.
+    // The fixtures directory holds the sidecars they resolve against.
+    manifestPlugin(new URL("./test/fixtures/", import.meta.url).pathname),
   ],
+  // The .astro components import the package by name, which resolves to
+  // dist/. Without these aliases a stale build would silently be under test:
+  // every render test passed against a dist/ that predated resolveDisclosure.
+  resolve: {
+    alias: [
+      {
+        find: /^@jonasmpi\/astro-ai-disclosure\/types$/,
+        replacement: new URL("./src/types.ts", import.meta.url).pathname,
+      },
+      {
+        find: /^@jonasmpi\/astro-ai-disclosure$/,
+        replacement: new URL("./src/index.ts", import.meta.url).pathname,
+      },
+    ],
+  },
   test: {
     include: ["test/**/*.test.ts"],
   },

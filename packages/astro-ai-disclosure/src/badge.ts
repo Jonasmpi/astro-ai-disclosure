@@ -18,6 +18,46 @@ export interface DisclosureOverrides {
   badgePosition?: BadgePosition;
 }
 
+/**
+ * Reads the absolute source path of an imported image.
+ *
+ * Astro's asset import returns a `Proxy` that answers `fsPath` with the
+ * original file path, identically in dev and in a production build — unlike
+ * `src`, which is `/@fs/…` in dev and a hashed `/_astro/…` in a build. That
+ * makes `fsPath` the only stable key for matching an image to its sidecar.
+ *
+ * `fsPath` is **not** part of Astro's public `ImageMetadata` type, so this is
+ * the single point of coupling to that detail: if a future Astro version stops
+ * exposing it, this function returns `undefined` and sidecar resolution stops
+ * working — rather than resolving something wrong.
+ *
+ * Returns `undefined` for remote images and plain strings, which have no local
+ * file at all.
+ */
+export function imageFsPath(image: unknown): string | undefined {
+  if (typeof image !== "object" || image === null) return undefined;
+  const value = (image as { fsPath?: unknown }).fsPath;
+  return typeof value === "string" && value !== "" ? value : undefined;
+}
+
+/**
+ * Resolves the declaration for an image: an inline `ai` prop always wins, and
+ * the sidecar manifest is the fallback.
+ *
+ * Inline-over-sidecar matters because a page may legitimately override what the
+ * asset's own metadata says — a crop, a different context — and the author's
+ * explicit prop is the more specific statement.
+ */
+export function resolveDisclosure(
+  inline: AIDisclosure | undefined,
+  image: unknown,
+  manifest: Readonly<Record<string, AIDisclosure>> = {},
+): AIDisclosure | undefined {
+  if (inline !== undefined) return inline;
+  const path = imageFsPath(image);
+  return path === undefined ? undefined : manifest[path];
+}
+
 /** Machine-readable declaration mirrored onto the wrapper element. */
 export interface DisclosureDataAttributes {
   "data-ai-kind"?: string;

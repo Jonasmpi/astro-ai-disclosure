@@ -1,0 +1,8 @@
+{
+  "kind": "generated",
+  "scope": "creative-work",
+  "provider": "Example Studio",
+  "model": "Illustration Model 1",
+  "createdAt": "2026-07-20",
+  "description": "Declared entirely through a sidecar; the page passes no ai prop"
+}

@@ -16,14 +16,22 @@ function runConfigSetup(integration: ReturnType<typeof aiDisclosure>) {
   const updateConfig = vi.fn();
   const hook = integration.hooks["astro:config:setup"];
   if (!hook) throw new Error("astro:config:setup hook missing");
-  void hook({ updateConfig } as unknown as Parameters<typeof hook>[0]);
+  void hook({
+    updateConfig,
+    config: { srcDir: new URL("file:///project/src/") },
+  } as unknown as Parameters<typeof hook>[0]);
   return updateConfig;
 }
 
-function pluginFrom(updateConfig: ReturnType<typeof vi.fn>): LoadablePlugin {
+function pluginsFrom(updateConfig: ReturnType<typeof vi.fn>): LoadablePlugin[] {
   const passed = updateConfig.mock.calls[0]?.[0] as { vite: { plugins: LoadablePlugin[] } };
-  const plugin = passed.vite.plugins[0];
-  if (!plugin) throw new Error("no plugin registered");
+  return passed.vite.plugins;
+}
+
+function pluginFrom(updateConfig: ReturnType<typeof vi.fn>, name?: string): LoadablePlugin {
+  const plugins = pluginsFrom(updateConfig);
+  const plugin = name ? plugins.find((entry) => entry.name === name) : plugins[0];
+  if (!plugin) throw new Error(`no plugin ${name ?? "[0]"} registered`);
   return plugin;
 }
 
@@ -65,10 +73,22 @@ describe("aiDisclosure — option validation timing", () => {
 });
 
 describe("astro:config:setup", () => {
-  it("registers the virtual-config Vite plugin", () => {
+  it("registers the config, manifest and enforcement plugins", () => {
     const updateConfig = runConfigSetup(aiDisclosure());
     expect(updateConfig).toHaveBeenCalledOnce();
-    expect(pluginFrom(updateConfig).name).toBe("astro-ai-disclosure:virtual-config");
+    expect(pluginsFrom(updateConfig).map((plugin) => plugin.name)).toEqual([
+      "astro-ai-disclosure:virtual-config",
+      "astro-ai-disclosure:manifest",
+      "astro-ai-disclosure:enforcement",
+    ]);
+  });
+
+  it("omits the enforcement plugin when enforcement is off", () => {
+    const updateConfig = runConfigSetup(aiDisclosure({ enforcement: "off" }));
+    expect(pluginsFrom(updateConfig).map((plugin) => plugin.name)).toEqual([
+      "astro-ai-disclosure:virtual-config",
+      "astro-ai-disclosure:manifest",
+    ]);
   });
 
   it("bakes the resolved options into the served module", () => {
@@ -120,9 +140,12 @@ describe("astro:config:done", () => {
     if (!hook) throw new Error("astro:config:done hook missing");
     void hook({ injectTypes } as unknown as Parameters<typeof hook>[0]);
 
-    expect(injectTypes).toHaveBeenCalledOnce();
-    const arg = injectTypes.mock.calls[0]?.[0] as { filename: string; content: string };
-    expect(arg.filename).toBe("config.d.ts");
-    expect(arg.content).toContain(`declare module "${VIRTUAL_CONFIG_ID}"`);
+    expect(injectTypes).toHaveBeenCalledTimes(2);
+    const calls = injectTypes.mock.calls.map(
+      (call) => call[0] as { filename: string; content: string },
+    );
+    expect(calls.map((call) => call.filename)).toEqual(["config.d.ts", "manifest.d.ts"]);
+    expect(calls[0]?.content).toContain(`declare module "${VIRTUAL_CONFIG_ID}"`);
+    expect(calls[1]?.content).toContain('declare module "virtual:ai-image-manifest"');
   });
 });

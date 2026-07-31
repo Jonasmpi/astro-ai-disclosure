@@ -1,0 +1,118 @@
+---
+import AIImage from "@jonasmpi/astro-ai-disclosure/AIImage.astro";
+import manifest from "virtual:ai-image-manifest";
+
+import abstractAIVisual from "../../assets/abstract-ai-visual.webp";
+import ScenarioLayout from "../../layouts/ScenarioLayout.astro";
+
+/**
+ * Not one of these usages passes an `ai` prop. The declaration comes from
+ * `src/assets/abstract-ai-visual.webp.ai.json`, matched to the image by its own
+ * absolute path.
+ */
+const entries = Object.entries(manifest);
+---
+
+<ScenarioLayout
+  title="Sidecar metadata"
+  intro="Metadata can live in a .ai.json file next to the asset instead of on every usage. The integration scans them at build time and exposes them as virtual:ai-image-manifest."
+  expectation="The first image carries a badge although the page passes no ai prop — it comes from the sidecar. The second passes an inline ai prop, which wins over the sidecar."
+>
+  <h2>Sidecar only — no <code>ai</code> prop on the page</h2>
+  <p class="note">
+    The sidecar declares <code>scope: "creative-work"</code>, which is in scope under
+    <code>eu-article-50</code> as well as the site's <code>all-ai</code>.
+  </p>
+  <AIImage
+    src={abstractAIVisual}
+    alt="Abstract illustration of an industrial AI system"
+    widths={[640]}
+    sizes="640px"
+    format="webp"
+  />
+
+  <h2>Inline metadata wins over the sidecar</h2>
+  <p class="note">
+    Same image, but the page states something more specific for this usage. The badge reads
+    <em>Mit KI-Unterstützung</em>, not the sidecar's <em>Von KI erzeugt</em>.
+  </p>
+  <AIImage
+    src={abstractAIVisual}
+    alt="Abstract illustration of an industrial AI system"
+    widths={[640]}
+    sizes="640px"
+    format="webp"
+    ai={{ kind: "assisted", scope: "creative-work", description: "Inline override for this usage" }}
+  />
+
+  <h2>What the manifest contains</h2>
+  <p class="note">
+    Keys are absolute source paths, because that is what Astro reports as an image's
+    <code>fsPath</code> in dev and in a production build alike — unlike <code>src</code>, which is
+    hashed in a build. Matching on the path means two same-named images in different folders keep
+    their own declarations.
+  </p>
+  <table>
+    <thead>
+      <tr><th>Image</th><th>kind</th><th>scope</th><th>provider</th></tr>
+    </thead>
+    <tbody>
+      {
+        entries.map(([path, disclosure]) => (
+          <tr>
+            <td>
+              <code>{path.split("/src/").pop()}</code>
+            </td>
+            <td>
+              <code>{disclosure.kind}</code>
+            </td>
+            <td>
+              <code>{disclosure.scope}</code>
+            </td>
+            <td>{disclosure.provider ?? "—"}</td>
+          </tr>
+        ))
+      }
+    </tbody>
+  </table>
+
+  <h2>Malformed sidecars fail the build</h2>
+  <p class="note">
+    A sidecar with an unknown <code>kind</code>, a misspelled field or invalid JSON stops the build
+    and names the file. A declaration the author got wrong is worse than none, so it is never
+    silently ignored.
+  </p>
+</ScenarioLayout>
+
+<style>
+  h2 {
+    margin-top: 2.25rem;
+    font-size: 1.05rem;
+  }
+
+  .note {
+    max-width: 46rem;
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+
+  table {
+    width: 100%;
+    max-width: 46rem;
+    border-collapse: collapse;
+    font-size: 0.88rem;
+  }
+
+  th,
+  td {
+    padding: 0.4rem 0.6rem;
+    border-bottom: 1px solid var(--border);
+    text-align: left;
+  }
+
+  th {
+    color: var(--muted);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+  }
+</style>

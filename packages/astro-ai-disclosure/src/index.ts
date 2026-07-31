@@ -1,17 +1,27 @@
+import { fileURLToPath } from "node:url";
+
 import type { AstroIntegration } from "astro";
 
 import { enforcementPlugin } from "./enforcement";
+import { VIRTUAL_MANIFEST_TYPES, manifestPlugin } from "./manifest";
 import { resolveOptions, toVirtualConfig } from "./options";
 import type { AIDisclosureOptions } from "./types";
 import { VIRTUAL_CONFIG_TYPES, virtualConfigPlugin } from "./virtual-config";
 
 export * from "./types";
 export { DEFAULT_LABELS, containsAI, resolveLabel, shouldDisclose } from "./disclosure";
-export { resolveBadge } from "./badge";
+export { imageFsPath, resolveBadge, resolveDisclosure } from "./badge";
 export type { BadgeView, DisclosureDataAttributes, DisclosureOverrides } from "./badge";
 export { AIDisclosureConfigError, DEFAULT_OPTIONS, mergeLabels, resolveOptions } from "./options";
 export { VIRTUAL_CONFIG_ID } from "./virtual-config";
 export { FORBIDDEN_BINDINGS, findForbiddenImports } from "./enforcement";
+export {
+  AIDisclosureSidecarError,
+  SIDECAR_SUFFIX,
+  VIRTUAL_MANIFEST_ID,
+  buildManifest,
+  parseSidecar,
+} from "./manifest";
 export type { ForbiddenImport } from "./enforcement";
 
 /**
@@ -34,7 +44,7 @@ export default function aiDisclosure(options: AIDisclosureOptions = {}): AstroIn
   return {
     name: INTEGRATION_NAME,
     hooks: {
-      "astro:config:setup": ({ updateConfig }) => {
+      "astro:config:setup": ({ config: astroConfig, updateConfig }) => {
         // `enforcement: "off"` yields no plugin at all rather than a no-op one.
         const enforcement = enforcementPlugin({
           enforcement: config.enforcement,
@@ -45,6 +55,7 @@ export default function aiDisclosure(options: AIDisclosureOptions = {}): AstroIn
           vite: {
             plugins: [
               virtualConfigPlugin(toVirtualConfig(config)),
+              manifestPlugin(fileURLToPath(astroConfig.srcDir)),
               ...(enforcement ? [enforcement] : []),
             ],
           },
@@ -54,6 +65,10 @@ export default function aiDisclosure(options: AIDisclosureOptions = {}): AstroIn
         injectTypes({
           filename: "config.d.ts",
           content: VIRTUAL_CONFIG_TYPES,
+        });
+        injectTypes({
+          filename: "manifest.d.ts",
+          content: VIRTUAL_MANIFEST_TYPES,
         });
       },
     },
