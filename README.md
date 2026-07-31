@@ -124,6 +124,11 @@ repository.
 GitHub Settings → Actions → General must also allow Actions to create pull requests, or the release
 workflow cannot open the version PR.
 
+## Design notes
+
+- [Machine-readable provenance (C2PA)](./docs/provenance.md) — why the package does not preserve or
+  re-sign C2PA manifests, with the measurements behind that decision.
+
 ## Legal note
 
 This package helps you _declare_ AI involvement consistently. It does not detect AI content, and the

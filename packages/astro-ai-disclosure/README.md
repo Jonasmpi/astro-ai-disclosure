@@ -376,6 +376,19 @@ accessible name — they would need prefixes no label set translates, and a scre
 stay short. Both remain available as `data-ai-*`. A `forced-colors` fallback keeps the badge legible
 in high-contrast mode.
 
+## Machine-readable provenance
+
+The package does **not** emit or preserve C2PA manifests, and deliberately so. A manifest hashes the
+pixel data, and Astro's ordinary resizing rewrites most of it — so a preserved manifest would fail
+every validator, which reads as tampering rather than as absence. Sharp has no JUMBF support either,
+and re-signing per variant would need a signing certificate in CI plus a claim about what a model did
+that this package cannot honestly make.
+
+What it offers instead: `data-ai-*` attributes on every image, a sorted and diffable
+`ai-image-disclosure-report.json`, and a baked label that survives the file leaving the page. The
+measurements behind the decision are in
+[docs/provenance.md](https://github.com/Jonasmpi/astro-ai-disclosure/blob/main/docs/provenance.md).
+
 ## Legal note
 
 This package helps you _declare_ AI involvement consistently and label it legibly. It does not detect
