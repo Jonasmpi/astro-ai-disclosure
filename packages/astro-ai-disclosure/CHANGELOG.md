@@ -1,5 +1,12 @@
 # @jonasmpi/astro-ai-disclosure
 
+## 0.4.1
+
+### Patch Changes
+
+- 5562ec7: Document the sidecar workflow, the validation rules and the report format, completing the
+  documentation for metadata at scale.
+
 ## 0.4.0
 
 ### Minor Changes
