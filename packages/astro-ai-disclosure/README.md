@@ -183,6 +183,8 @@ Both components accept everything their `astro:assets` counterpart does, plus:
 | `policy`        | `DisclosurePolicy` | Overrides the configured policy for this image.    |
 | `language`      | `Language`         | Overrides the configured language.                 |
 | `badgePosition` | `BadgePosition`    | Overrides the configured corner.                   |
+| `badgeMode`     | `BadgeMode`        | `"overlay"` or `"baked"` for this image.           |
+| `badgeIcon`     | `BadgeIcon`        | `"none"` or `"eu"` for this image.                 |
 
 `AIDisclosure` fields: `kind` and `scope` (both required), plus optional `provider`, `model`,
 `createdAt`, `description` and `label`. A `label` overrides the generated badge text.
